@@ -4,6 +4,7 @@ using CareerAdvisorAPIs.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CareerAdvisorAPIs.Migrations
 {
     [DbContext(typeof(CareerAdvisorCtx))]
-    partial class CareerAdvisorCtxModelSnapshot : ModelSnapshot
+    [Migration("20250327171532_UpdateUserNull")]
+    partial class UpdateUserNull
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -540,6 +543,7 @@ namespace CareerAdvisorAPIs.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Token")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("TokenExpiration")

@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 
 namespace CareerAdvisorAPIs.Models
 {
@@ -33,6 +34,18 @@ namespace CareerAdvisorAPIs.Models
         public bool EmailVerified { get; set; }
 
         public DateTime CreatedAt { get; set; }
+
+        public string? Token { get; set; }
+
+        public DateTime? TokenExpiration { get; set; }
+
+        public string? VerificationToken { get; set; }
+
+        public DateTime? VerificationTokenExpiry { get; set; }
+
+        public string? PasswordResetToken { get; set; }
+
+        public DateTime? ResetTokenExpiry { get; set; }
 
         public Profile Profile { get; set; }
 

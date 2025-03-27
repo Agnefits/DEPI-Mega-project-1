@@ -29,11 +29,11 @@ namespace CareerAdvisorAPIs.Data
             if (!optionsBuilder.IsConfigured)
             {
                 IConfigurationRoot configuration = new ConfigurationBuilder()
-                    .SetBasePath(AppContext.BaseDirectory) // Ensures the correct path
+                    .SetBasePath(AppContext.BaseDirectory)
                     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                     .Build();
 
-                string connectionString = configuration.GetConnectionString("DefaultConnection"); // Use the correct key name
+                string connectionString = configuration.GetConnectionString("DefaultConnection");
                 if (string.IsNullOrEmpty(connectionString))
                 {
                     throw new InvalidOperationException("Database connection string is missing.");
