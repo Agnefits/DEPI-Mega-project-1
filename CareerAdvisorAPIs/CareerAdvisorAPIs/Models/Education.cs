@@ -6,23 +6,23 @@ namespace CareerAdvisorAPIs.Models
     public class Education
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int EducationID { get; set; }
 
-        [Required, MaxLength(255)]
-        public string InstitutionName { get; set; }
+        [ForeignKey("Profile")]
+        public int ProfileID { get; set; }
 
-        [Required, MaxLength(255)]
+        [MaxLength(150)]
+        public string University { get; set; }
+
+        [MaxLength(100)]
         public string Degree { get; set; }
 
-        [Required, MaxLength(255)]
-        public string FieldOfStudy { get; set; }
+        public DateTime DateFrom { get; set; }
+        public DateTime? DateTo { get; set; }
 
-        public DateTime StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
+        public string? Description { get; set; }
 
-        [ForeignKey("User")]
-        public int UserID { get; set; }
-        public User User { get; set; }
+        public Profile Profile { get; set; }
     }
+
 }

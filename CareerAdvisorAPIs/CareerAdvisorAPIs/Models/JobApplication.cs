@@ -6,25 +6,39 @@ namespace CareerAdvisorAPIs.Models
     public class JobApplication
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int JobApplicationID { get; set; }
+        public int ApplicationID { get; set; }
 
-        [Required, MaxLength(255)]
-        public string JobTitle { get; set; }
-
-        [Required, MaxLength(255)]
-        public string CompanyName { get; set; }
-
-        public string JobDescription { get; set; }
-        
-        public DateTime AppliedDate { get; set; }
-
-        public string Status { get; set; }
-
-        public string Notes { get; set; }
+        [ForeignKey("JobListing")]
+        public int JobID { get; set; }
 
         [ForeignKey("User")]
         public int UserID { get; set; }
+
+        [Required, MaxLength(100)]
+        public string Fullname { get; set; }
+
+        [Required, EmailAddress, MaxLength(150)]
+        public string Email { get; set; }
+
+        [MaxLength(20)]
+        public string Phone { get; set; }
+
+        [MaxLength(100)]
+        public string? CurrentJob { get; set; }
+
+        [Url]
+        public string LinkedInLink { get; set; }
+
+        [Url]
+        public string PortfolioLink { get; set; }
+        public string? AdditionalInformation { get; set; }
+        public string? ResumeFile { get; set; }
+        public DateTime AppliedDate { get; set; }
+
+        [MaxLength(50)]
+        public string Status { get; set; }
+
         public User User { get; set; }
+        public JobListing JobListing { get; set; }
     }
 }

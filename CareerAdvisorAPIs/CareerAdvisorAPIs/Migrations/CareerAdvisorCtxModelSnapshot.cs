@@ -22,60 +22,6 @@ namespace CareerAdvisorAPIs.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("CareerAdvisorAPIs.Models.Cause", b =>
-                {
-                    b.Property<int>("CauseID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CauseID"));
-
-                    b.Property<string>("CauseName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<int>("UserID")
-                        .HasColumnType("int");
-
-                    b.HasKey("CauseID");
-
-                    b.HasIndex("UserID");
-
-                    b.ToTable("Causes");
-                });
-
-            modelBuilder.Entity("CareerAdvisorAPIs.Models.CertificationCourse", b =>
-                {
-                    b.Property<int>("CourseID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CourseID"));
-
-                    b.Property<DateTime>("CompletionDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CourseName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("IssuingOrganization")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<int>("UserID")
-                        .HasColumnType("int");
-
-                    b.HasKey("CourseID");
-
-                    b.HasIndex("UserID");
-
-                    b.ToTable("CertificationsCourses");
-                });
-
             modelBuilder.Entity("CareerAdvisorAPIs.Models.Education", b =>
                 {
                     b.Property<int>("EducationID")
@@ -84,33 +30,31 @@ namespace CareerAdvisorAPIs.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EducationID"));
 
+                    b.Property<DateTime>("DateFrom")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DateTo")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Degree")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
-                    b.Property<DateTime?>("EndDate")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("FieldOfStudy")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("InstitutionName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("UserID")
+                    b.Property<int>("ProfileID")
                         .HasColumnType("int");
+
+                    b.Property<string>("University")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
                     b.HasKey("EducationID");
 
-                    b.HasIndex("UserID");
+                    b.HasIndex("ProfileID");
 
                     b.ToTable("Educations");
                 });
@@ -123,74 +67,82 @@ namespace CareerAdvisorAPIs.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ExperienceID"));
 
-                    b.Property<string>("CompanyName")
+                    b.Property<string>("City")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Company")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("Country")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("DateFrom")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DateTo")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ProfileID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("ExperienceID");
+
+                    b.HasIndex("ProfileID");
+
+                    b.ToTable("Experiences");
+                });
+
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.Help", b =>
+                {
+                    b.Property<int>("HelpID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("HelpID"));
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("EndDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("JobTitle")
+                    b.Property<string>("Title")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime2");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<int>("UserID")
                         .HasColumnType("int");
 
-                    b.HasKey("ExperienceID");
+                    b.HasKey("HelpID");
 
                     b.HasIndex("UserID");
 
-                    b.ToTable("Experiences");
-                });
-
-            modelBuilder.Entity("CareerAdvisorAPIs.Models.HonorAchievement", b =>
-                {
-                    b.Property<int>("HonorID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("HonorID"));
-
-                    b.Property<DateTime>("DateAwarded")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("HonorTitle")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("IssuingOrganization")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<int>("UserID")
-                        .HasColumnType("int");
-
-                    b.HasKey("HonorID");
-
-                    b.HasIndex("UserID");
-
-                    b.ToTable("HonorsAchievements");
+                    b.ToTable("HelpEntries");
                 });
 
             modelBuilder.Entity("CareerAdvisorAPIs.Models.InterviewSimulation", b =>
                 {
-                    b.Property<int>("InterviewSimulationID")
+                    b.Property<int>("InterviewID")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("InterviewSimulationID"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("InterviewID"));
 
                     b.Property<string>("AIFeedback")
                         .IsRequired()
@@ -205,7 +157,7 @@ namespace CareerAdvisorAPIs.Migrations
                     b.Property<int>("UserID")
                         .HasColumnType("int");
 
-                    b.HasKey("InterviewSimulationID");
+                    b.HasKey("InterviewID");
 
                     b.HasIndex("UserID");
 
@@ -214,103 +166,221 @@ namespace CareerAdvisorAPIs.Migrations
 
             modelBuilder.Entity("CareerAdvisorAPIs.Models.JobApplication", b =>
                 {
-                    b.Property<int>("JobApplicationID")
+                    b.Property<int>("ApplicationID")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("JobApplicationID"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ApplicationID"));
+
+                    b.Property<string>("AdditionalInformation")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("AppliedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("CompanyName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                    b.Property<string>("CurrentJob")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("JobDescription")
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("Fullname")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("JobID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("LinkedInLink")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("JobTitle")
+                    b.Property<string>("Phone")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
-                    b.Property<string>("Notes")
+                    b.Property<string>("PortfolioLink")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ResumeFile")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<int>("UserID")
                         .HasColumnType("int");
 
-                    b.HasKey("JobApplicationID");
+                    b.HasKey("ApplicationID");
+
+                    b.HasIndex("JobID");
 
                     b.HasIndex("UserID");
 
                     b.ToTable("JobApplications");
                 });
 
-            modelBuilder.Entity("CareerAdvisorAPIs.Models.JobMarketTrend", b =>
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.JobBenefit", b =>
                 {
-                    b.Property<int>("TrendID")
+                    b.Property<int>("BenefitID")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TrendID"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BenefitID"));
 
-                    b.Property<decimal>("AverageSalary")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("DemandLevel")
+                    b.Property<int>("JobID")
                         .HasColumnType("int");
 
-                    b.Property<string>("SkillName")
+                    b.Property<string>("Title")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
+                    b.HasKey("BenefitID");
 
-                    b.HasKey("TrendID");
+                    b.HasIndex("JobID");
 
-                    b.ToTable("JobMarketTrends");
+                    b.ToTable("JobBenefits");
                 });
 
-            modelBuilder.Entity("CareerAdvisorAPIs.Models.JobRecommendation", b =>
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.JobCategory", b =>
                 {
-                    b.Property<int>("JobRecommendationID")
+                    b.Property<int>("CategoryID")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("JobRecommendationID"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CategoryID"));
 
-                    b.Property<string>("CompanyName")
+                    b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
-                    b.Property<DateTime>("GeneratedAt")
+                    b.HasKey("CategoryID");
+
+                    b.ToTable("JobCategories");
+                });
+
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.JobListing", b =>
+                {
+                    b.Property<int>("JobID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("JobID"));
+
+                    b.Property<string>("AdditionalInformation")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ApplyBefore")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("JobTitle")
+                    b.Property<int?>("Capacity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("City")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Company")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("CompanyPapers")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CompanyWebsite")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Country")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("JobPostedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Keywords")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NiceToHaves")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Responsibilities")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("SalaryFrom")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("SalaryTo")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Type")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<int>("UserID")
                         .HasColumnType("int");
 
-                    b.HasKey("JobRecommendationID");
+                    b.Property<string>("WhoYouAre")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("JobID");
 
                     b.HasIndex("UserID");
 
-                    b.ToTable("JobRecommendations");
+                    b.ToTable("JobListings");
+                });
+
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.JobListingCategory", b =>
+                {
+                    b.Property<int>("JobID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CategoryID")
+                        .HasColumnType("int");
+
+                    b.HasKey("JobID", "CategoryID");
+
+                    b.HasIndex("CategoryID");
+
+                    b.ToTable("JobListingCategories");
+                });
+
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.JobListingSkill", b =>
+                {
+                    b.Property<int>("JobID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SkillID")
+                        .HasColumnType("int");
+
+                    b.HasKey("JobID", "SkillID");
+
+                    b.HasIndex("SkillID");
+
+                    b.ToTable("JobListingSkills");
                 });
 
             modelBuilder.Entity("CareerAdvisorAPIs.Models.Language", b =>
@@ -321,24 +391,95 @@ namespace CareerAdvisorAPIs.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LanguageID"));
 
-                    b.Property<string>("LanguageName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Proficiency")
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.HasKey("LanguageID");
+
+                    b.ToTable("Languages");
+                });
+
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.Notification", b =>
+                {
+                    b.Property<int>("NotificationID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("NotificationID"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ProfileID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("NotificationID");
+
+                    b.HasIndex("ProfileID");
+
+                    b.ToTable("Notifications");
+                });
+
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.NotificationSetting", b =>
+                {
                     b.Property<int>("UserID")
                         .HasColumnType("int");
 
-                    b.HasKey("LanguageID");
+                    b.Property<bool>("ApplicationsOn")
+                        .HasColumnType("bit");
 
-                    b.HasIndex("UserID");
+                    b.Property<bool>("JobsOn")
+                        .HasColumnType("bit");
 
-                    b.ToTable("Languages");
+                    b.Property<bool>("RecommendationsOn")
+                        .HasColumnType("bit");
+
+                    b.HasKey("UserID");
+
+                    b.ToTable("NotificationSettings");
+                });
+
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.Portfolio", b =>
+                {
+                    b.Property<int>("PortfolioID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PortfolioID"));
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Image")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ProfileID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.HasKey("PortfolioID");
+
+                    b.HasIndex("ProfileID");
+
+                    b.ToTable("Portfolios");
                 });
 
             modelBuilder.Entity("CareerAdvisorAPIs.Models.Profile", b =>
@@ -349,21 +490,30 @@ namespace CareerAdvisorAPIs.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProfileID"));
 
-                    b.Property<string>("About")
-                        .IsRequired()
+                    b.Property<string>("AboutMe")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("BannerImage")
-                        .IsRequired()
+                    b.Property<string>("CoverImage")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Headline")
-                        .IsRequired()
+                    b.Property<string>("Gender")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("Image")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("ProfileImage")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("JobTitle")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Type")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<int>("UserID")
                         .HasColumnType("int");
@@ -376,96 +526,77 @@ namespace CareerAdvisorAPIs.Migrations
                     b.ToTable("Profiles");
                 });
 
-            modelBuilder.Entity("CareerAdvisorAPIs.Models.Project", b =>
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.Resume", b =>
                 {
-                    b.Property<int>("ProjectID")
+                    b.Property<int>("ResumeID")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProjectID"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ResumeID"));
 
-                    b.Property<string>("Description")
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("File")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("EndDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ProjectTitle")
+                    b.Property<string>("FileName")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime2");
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
                     b.Property<int>("UserID")
                         .HasColumnType("int");
 
-                    b.HasKey("ProjectID");
+                    b.HasKey("ResumeID");
 
                     b.HasIndex("UserID");
 
-                    b.ToTable("Projects");
+                    b.ToTable("Resumes");
                 });
 
             modelBuilder.Entity("CareerAdvisorAPIs.Models.ResumeFeedback", b =>
                 {
-                    b.Property<int>("ResumeFeedbackID")
+                    b.Property<int>("FeedbackID")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ResumeFeedbackID"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("FeedbackID"));
 
                     b.Property<string>("FeedbackText")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("ResumeFile")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("ResumeID")
+                        .HasColumnType("int");
 
                     b.Property<decimal>("Score")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("UserID")
-                        .HasColumnType("int");
+                    b.HasKey("FeedbackID");
 
-                    b.HasKey("ResumeFeedbackID");
-
-                    b.HasIndex("UserID");
+                    b.HasIndex("ResumeID");
 
                     b.ToTable("ResumeFeedbacks");
                 });
 
-            modelBuilder.Entity("CareerAdvisorAPIs.Models.Service", b =>
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.SavedJob", b =>
                 {
-                    b.Property<int>("ServiceID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ServiceID"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ServiceName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
                     b.Property<int>("UserID")
                         .HasColumnType("int");
 
-                    b.HasKey("ServiceID");
+                    b.Property<int>("JobID")
+                        .HasColumnType("int");
 
-                    b.HasIndex("UserID");
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
 
-                    b.ToTable("Services");
+                    b.HasKey("UserID", "JobID");
+
+                    b.HasIndex("JobID");
+
+                    b.ToTable("SavedJobs");
                 });
 
             modelBuilder.Entity("CareerAdvisorAPIs.Models.Skill", b =>
@@ -476,19 +607,77 @@ namespace CareerAdvisorAPIs.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SkillID"));
 
-                    b.Property<string>("SkillName")
+                    b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("SkillID");
+
+                    b.ToTable("Skills");
+                });
+
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.SocialLink", b =>
+                {
+                    b.Property<int>("LinkID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LinkID"));
+
+                    b.Property<string>("Link")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("ProfileID")
+                        .HasColumnType("int");
+
+                    b.HasKey("LinkID");
+
+                    b.HasIndex("ProfileID");
+
+                    b.ToTable("SocialLinks");
+                });
+
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.Token", b =>
+                {
+                    b.Property<int>("TokenID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TokenID"));
+
+                    b.Property<int>("AvailableTries")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpireDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TokenName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("TokenValue")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("UserID")
                         .HasColumnType("int");
 
-                    b.HasKey("SkillID");
+                    b.HasKey("TokenID");
 
                     b.HasIndex("UserID");
 
-                    b.ToTable("Skills");
+                    b.ToTable("Tokens");
                 });
 
             modelBuilder.Entity("CareerAdvisorAPIs.Models.User", b =>
@@ -499,153 +688,101 @@ namespace CareerAdvisorAPIs.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserID"));
 
-                    b.Property<string>("AuthProvider")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime?>("DeleteDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
-                    b.Property<bool>("EmailVerified")
+                    b.Property<string>("Fullname")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
                     b.Property<string>("PasswordHash")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("PasswordResetToken")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("ResetTokenExpiry")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("SecretAnswer")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Token")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("TokenExpiration")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UserType")
+                    b.Property<string>("Provider")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("VerificationToken")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
-                    b.Property<DateTime?>("VerificationTokenExpiry")
-                        .HasColumnType("datetime2");
+                    b.Property<bool>("Verified")
+                        .HasColumnType("bit");
 
                     b.HasKey("UserID");
-
-                    b.HasIndex("Email")
-                        .IsUnique();
 
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("CareerAdvisorAPIs.Models.VolunteerExperience", b =>
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.UserLanguage", b =>
                 {
-                    b.Property<int>("VolunteerID")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int>("ProfileID")
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("VolunteerID"));
-
-                    b.Property<DateTime?>("EndDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("OrganizationName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("UserID")
+                    b.Property<int>("LanguageID")
                         .HasColumnType("int");
 
-                    b.HasKey("VolunteerID");
+                    b.HasKey("ProfileID", "LanguageID");
 
-                    b.HasIndex("UserID");
+                    b.HasIndex("LanguageID");
 
-                    b.ToTable("VolunteerExperiences");
+                    b.ToTable("UserLanguages");
                 });
 
-            modelBuilder.Entity("CareerAdvisorAPIs.Models.Cause", b =>
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.UserSkill", b =>
                 {
-                    b.HasOne("CareerAdvisorAPIs.Models.User", "User")
-                        .WithMany("Causes")
-                        .HasForeignKey("UserID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Property<int>("ProfileID")
+                        .HasColumnType("int");
 
-                    b.Navigation("User");
-                });
+                    b.Property<int>("SkillID")
+                        .HasColumnType("int");
 
-            modelBuilder.Entity("CareerAdvisorAPIs.Models.CertificationCourse", b =>
-                {
-                    b.HasOne("CareerAdvisorAPIs.Models.User", "User")
-                        .WithMany("CertificationCourses")
-                        .HasForeignKey("UserID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasKey("ProfileID", "SkillID");
 
-                    b.Navigation("User");
+                    b.HasIndex("SkillID");
+
+                    b.ToTable("UserSkills");
                 });
 
             modelBuilder.Entity("CareerAdvisorAPIs.Models.Education", b =>
                 {
-                    b.HasOne("CareerAdvisorAPIs.Models.User", "User")
-                        .WithMany("Educations")
-                        .HasForeignKey("UserID")
+                    b.HasOne("CareerAdvisorAPIs.Models.Profile", "Profile")
+                        .WithMany()
+                        .HasForeignKey("ProfileID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("User");
+                    b.Navigation("Profile");
                 });
 
             modelBuilder.Entity("CareerAdvisorAPIs.Models.Experience", b =>
                 {
-                    b.HasOne("CareerAdvisorAPIs.Models.User", "User")
-                        .WithMany("Experiences")
-                        .HasForeignKey("UserID")
+                    b.HasOne("CareerAdvisorAPIs.Models.Profile", "Profile")
+                        .WithMany()
+                        .HasForeignKey("ProfileID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("User");
+                    b.Navigation("Profile");
                 });
 
-            modelBuilder.Entity("CareerAdvisorAPIs.Models.HonorAchievement", b =>
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.Help", b =>
                 {
                     b.HasOne("CareerAdvisorAPIs.Models.User", "User")
-                        .WithMany("Honors")
+                        .WithMany("HelpEntries")
                         .HasForeignKey("UserID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -666,19 +803,38 @@ namespace CareerAdvisorAPIs.Migrations
 
             modelBuilder.Entity("CareerAdvisorAPIs.Models.JobApplication", b =>
                 {
+                    b.HasOne("CareerAdvisorAPIs.Models.JobListing", "JobListing")
+                        .WithMany("JobApplications")
+                        .HasForeignKey("JobID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("CareerAdvisorAPIs.Models.User", "User")
                         .WithMany("JobApplications")
                         .HasForeignKey("UserID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("JobListing");
+
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("CareerAdvisorAPIs.Models.JobRecommendation", b =>
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.JobBenefit", b =>
+                {
+                    b.HasOne("CareerAdvisorAPIs.Models.JobListing", "JobListing")
+                        .WithMany("JobBenefits")
+                        .HasForeignKey("JobID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("JobListing");
+                });
+
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.JobListing", b =>
                 {
                     b.HasOne("CareerAdvisorAPIs.Models.User", "User")
-                        .WithMany("JobRecommendations")
+                        .WithMany("JobListings")
                         .HasForeignKey("UserID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -686,15 +842,75 @@ namespace CareerAdvisorAPIs.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("CareerAdvisorAPIs.Models.Language", b =>
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.JobListingCategory", b =>
+                {
+                    b.HasOne("CareerAdvisorAPIs.Models.JobCategory", "JobCategory")
+                        .WithMany("JobListingCategories")
+                        .HasForeignKey("CategoryID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CareerAdvisorAPIs.Models.JobListing", "JobListing")
+                        .WithMany("JobListingCategories")
+                        .HasForeignKey("JobID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("JobCategory");
+
+                    b.Navigation("JobListing");
+                });
+
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.JobListingSkill", b =>
+                {
+                    b.HasOne("CareerAdvisorAPIs.Models.JobListing", "JobListing")
+                        .WithMany("JobListingSkills")
+                        .HasForeignKey("JobID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CareerAdvisorAPIs.Models.Skill", "Skill")
+                        .WithMany("JobListingSkills")
+                        .HasForeignKey("SkillID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("JobListing");
+
+                    b.Navigation("Skill");
+                });
+
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.Notification", b =>
+                {
+                    b.HasOne("CareerAdvisorAPIs.Models.Profile", "Profile")
+                        .WithMany()
+                        .HasForeignKey("ProfileID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Profile");
+                });
+
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.NotificationSetting", b =>
                 {
                     b.HasOne("CareerAdvisorAPIs.Models.User", "User")
-                        .WithMany("Languages")
-                        .HasForeignKey("UserID")
+                        .WithOne("NotificationSetting")
+                        .HasForeignKey("CareerAdvisorAPIs.Models.NotificationSetting", "UserID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.Portfolio", b =>
+                {
+                    b.HasOne("CareerAdvisorAPIs.Models.Profile", "Profile")
+                        .WithMany()
+                        .HasForeignKey("ProfileID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Profile");
                 });
 
             modelBuilder.Entity("CareerAdvisorAPIs.Models.Profile", b =>
@@ -708,10 +924,10 @@ namespace CareerAdvisorAPIs.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("CareerAdvisorAPIs.Models.Project", b =>
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.Resume", b =>
                 {
                     b.HasOne("CareerAdvisorAPIs.Models.User", "User")
-                        .WithMany("Projects")
+                        .WithMany("Resumes")
                         .HasForeignKey("UserID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -721,8 +937,49 @@ namespace CareerAdvisorAPIs.Migrations
 
             modelBuilder.Entity("CareerAdvisorAPIs.Models.ResumeFeedback", b =>
                 {
+                    b.HasOne("CareerAdvisorAPIs.Models.Resume", "Resume")
+                        .WithMany()
+                        .HasForeignKey("ResumeID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Resume");
+                });
+
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.SavedJob", b =>
+                {
+                    b.HasOne("CareerAdvisorAPIs.Models.JobListing", "JobListing")
+                        .WithMany("SavedJobs")
+                        .HasForeignKey("JobID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("CareerAdvisorAPIs.Models.User", "User")
-                        .WithMany("ResumeFeedbacks")
+                        .WithMany("SavedJobs")
+                        .HasForeignKey("UserID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("JobListing");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.SocialLink", b =>
+                {
+                    b.HasOne("CareerAdvisorAPIs.Models.Profile", "Profile")
+                        .WithMany()
+                        .HasForeignKey("ProfileID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Profile");
+                });
+
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.Token", b =>
+                {
+                    b.HasOne("CareerAdvisorAPIs.Models.User", "User")
+                        .WithMany("Tokens")
                         .HasForeignKey("UserID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -730,71 +987,90 @@ namespace CareerAdvisorAPIs.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("CareerAdvisorAPIs.Models.Service", b =>
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.UserLanguage", b =>
                 {
-                    b.HasOne("CareerAdvisorAPIs.Models.User", "User")
-                        .WithMany("Services")
-                        .HasForeignKey("UserID")
+                    b.HasOne("CareerAdvisorAPIs.Models.Language", "Language")
+                        .WithMany()
+                        .HasForeignKey("LanguageID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("User");
+                    b.HasOne("CareerAdvisorAPIs.Models.Profile", "Profile")
+                        .WithMany()
+                        .HasForeignKey("ProfileID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Language");
+
+                    b.Navigation("Profile");
+                });
+
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.UserSkill", b =>
+                {
+                    b.HasOne("CareerAdvisorAPIs.Models.Profile", "Profile")
+                        .WithMany()
+                        .HasForeignKey("ProfileID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CareerAdvisorAPIs.Models.Skill", "Skill")
+                        .WithMany("UserSkills")
+                        .HasForeignKey("SkillID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Profile");
+
+                    b.Navigation("Skill");
+                });
+
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.JobCategory", b =>
+                {
+                    b.Navigation("JobListingCategories");
+                });
+
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.JobListing", b =>
+                {
+                    b.Navigation("JobApplications");
+
+                    b.Navigation("JobBenefits");
+
+                    b.Navigation("JobListingCategories");
+
+                    b.Navigation("JobListingSkills");
+
+                    b.Navigation("SavedJobs");
                 });
 
             modelBuilder.Entity("CareerAdvisorAPIs.Models.Skill", b =>
                 {
-                    b.HasOne("CareerAdvisorAPIs.Models.User", "User")
-                        .WithMany("Skills")
-                        .HasForeignKey("UserID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Navigation("JobListingSkills");
 
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("CareerAdvisorAPIs.Models.VolunteerExperience", b =>
-                {
-                    b.HasOne("CareerAdvisorAPIs.Models.User", "User")
-                        .WithMany("VolunteerExperiences")
-                        .HasForeignKey("UserID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
+                    b.Navigation("UserSkills");
                 });
 
             modelBuilder.Entity("CareerAdvisorAPIs.Models.User", b =>
                 {
-                    b.Navigation("Causes");
-
-                    b.Navigation("CertificationCourses");
-
-                    b.Navigation("Educations");
-
-                    b.Navigation("Experiences");
-
-                    b.Navigation("Honors");
+                    b.Navigation("HelpEntries");
 
                     b.Navigation("InterviewSimulations");
 
                     b.Navigation("JobApplications");
 
-                    b.Navigation("JobRecommendations");
+                    b.Navigation("JobListings");
 
-                    b.Navigation("Languages");
+                    b.Navigation("NotificationSetting")
+                        .IsRequired();
 
                     b.Navigation("Profile")
                         .IsRequired();
 
-                    b.Navigation("Projects");
+                    b.Navigation("Resumes");
 
-                    b.Navigation("ResumeFeedbacks");
+                    b.Navigation("SavedJobs");
 
-                    b.Navigation("Services");
-
-                    b.Navigation("Skills");
-
-                    b.Navigation("VolunteerExperiences");
+                    b.Navigation("Tokens");
                 });
 #pragma warning restore 612, 618
         }

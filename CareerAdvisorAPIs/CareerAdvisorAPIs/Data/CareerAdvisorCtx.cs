@@ -7,48 +7,64 @@ namespace CareerAdvisorAPIs.Data
 {
     public class CareerAdvisorCtx : DbContext
     {
+        public CareerAdvisorCtx(DbContextOptions<CareerAdvisorCtx> options) : base(options) { }
+
+        // Users and authentication
         public DbSet<User> Users { get; set; }
+        public DbSet<Token> Tokens { get; set; }
+
+        // Jobs
+        public DbSet<JobListing> JobListings { get; set; }
+        public DbSet<JobCategory> JobCategories { get; set; }
+        public DbSet<JobListingCategory> JobListingCategories { get; set; }
+        public DbSet<JobBenefit> JobBenefits { get; set; }
+        public DbSet<SavedJob> SavedJobs { get; set; }
+        public DbSet<JobApplication> JobApplications { get; set; }
+
+        // Profiles
         public DbSet<Profile> Profiles { get; set; }
+        public DbSet<Portfolio> Portfolios { get; set; }
+        public DbSet<Language> Languages { get; set; }
+        public DbSet<UserLanguage> UserLanguages { get; set; }
         public DbSet<Skill> Skills { get; set; }
+        public DbSet<UserSkill> UserSkills { get; set; }
+        public DbSet<JobListingSkill> JobListingSkills { get; set; }
+        public DbSet<SocialLink> SocialLinks { get; set; }
         public DbSet<Experience> Experiences { get; set; }
         public DbSet<Education> Educations { get; set; }
-        public DbSet<CertificationCourse> CertificationsCourses { get; set; }
-        public DbSet<Language> Languages { get; set; }
-        public DbSet<Project> Projects { get; set; }
-        public DbSet<HonorAchievement> HonorsAchievements { get; set; }
-        public DbSet<VolunteerExperience> VolunteerExperiences { get; set; }
-        public DbSet<Cause> Causes { get; set; }
-        public DbSet<Service> Services { get; set; }
-        public DbSet<JobApplication> JobApplications { get; set; }
-        public DbSet<JobRecommendation> JobRecommendations { get; set; }
+
+        // Resumes and interview
+        public DbSet<Resume> Resumes { get; set; }
         public DbSet<ResumeFeedback> ResumeFeedbacks { get; set; }
         public DbSet<InterviewSimulation> InterviewSimulations { get; set; }
-        public DbSet<JobMarketTrend> JobMarketTrends { get; set; }
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            if (!optionsBuilder.IsConfigured)
-            {
-                IConfigurationRoot configuration = new ConfigurationBuilder()
-                    .SetBasePath(AppContext.BaseDirectory)
-                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                    .Build();
 
-                string connectionString = configuration.GetConnectionString("DefaultConnection");
-                if (string.IsNullOrEmpty(connectionString))
-                {
-                    throw new InvalidOperationException("Database connection string is missing.");
-                }
+        // Notifications and Help
+        public DbSet<Notification> Notifications { get; set; }
+        public DbSet<NotificationSetting> NotificationSettings { get; set; }
+        public DbSet<Help> HelpEntries { get; set; }
 
-                optionsBuilder.UseSqlServer(connectionString);
-            }
-        }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<User>()
-                .HasIndex(u => u.Email)
-                .IsUnique();
+            // Composite Keys
+            modelBuilder.Entity<JobListingCategory>()
+                .HasKey(jc => new { jc.JobID, jc.CategoryID });
+
+            modelBuilder.Entity<JobListingSkill>()
+                .HasKey(js => new { js.JobID, js.SkillID });
+
+            modelBuilder.Entity<UserLanguage>()
+                .HasKey(ul => new { ul.ProfileID, ul.LanguageID });
+
+            modelBuilder.Entity<UserSkill>()
+                .HasKey(us => new { us.ProfileID, us.SkillID });
+
+            modelBuilder.Entity<SavedJob>()
+                .HasKey(sj => new { sj.UserID, sj.JobID });
+
+            modelBuilder.Entity<NotificationSetting>()
+                .HasKey(ns => ns.UserID);
         }
     }
 

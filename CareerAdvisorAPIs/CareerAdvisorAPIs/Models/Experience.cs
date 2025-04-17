@@ -6,23 +6,31 @@ namespace CareerAdvisorAPIs.Models
     public class Experience
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int ExperienceID { get; set; }
 
-        [Required, MaxLength(255)]
-        public string CompanyName { get; set; }
+        [ForeignKey("Profile")]
+        public int ProfileID { get; set; }
 
-        [Required, MaxLength(255)]
-        public string JobTitle { get; set; }
+        [MaxLength(100)]
+        public string Title { get; set; }
 
-        public DateTime StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
+        [MaxLength(150)]
+        public string Company { get; set; }
 
-        public string Description { get; set; }
+        [MaxLength(50)]
+        public string Type { get; set; }
 
+        public DateTime? DateFrom { get; set; }
+        public DateTime? DateTo { get; set; }
 
-        [ForeignKey("User")]
-        public int UserID { get; set; }
-        public User User { get; set; }
+        [MaxLength(100)]
+        public string? City { get; set; }
+
+        [MaxLength(100)]
+        public string? Country { get; set; }
+
+        public string? Description { get; set; }
+
+        public Profile Profile { get; set; }
     }
 }

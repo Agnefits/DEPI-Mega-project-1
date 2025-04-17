@@ -6,21 +6,15 @@ namespace CareerAdvisorAPIs.Models
     public class ResumeFeedback
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int ResumeFeedbackID { get; set; }
+        public int FeedbackID { get; set; }
 
-        [Required]
-        public string ResumeFile { get; set; }
+        [ForeignKey("Resume")]
+        public int ResumeID { get; set; }
 
-        [Required]
         public string FeedbackText { get; set; }
 
         public decimal Score { get; set; }
 
-        public DateTime CreatedAt { get; set; }
-
-        [ForeignKey("User")]
-        public int UserID { get; set; }
-        public User User { get; set; }
+        public Resume Resume { get; set; }
     }
 }
