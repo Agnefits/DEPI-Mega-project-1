@@ -2,6 +2,9 @@
 
 namespace CareerAdvisorAPIs.Repository.Interfaces
 {
-    public interface INotificationSettingRepository : IRepository<NotificationSetting> { }
+    public interface INotificationSettingRepository : IRepository<NotificationSetting> {
+
+        Task<NotificationSetting?> GetByUserIdAsync(int userId);
+    }
 
 }

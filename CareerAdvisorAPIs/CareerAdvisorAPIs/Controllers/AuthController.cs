@@ -85,13 +85,92 @@ namespace CareerAdvisorAPIs.Controllers
             await _unitOfWork.SaveAsync();
 
             // Send verification email
-            bool status = await _emailService.SendEmailAsync(user.Email, "Verify Your Email", $"Verification Code: {verificationCode}.", false);
+            bool status = await _emailService.SendEmailAsync(
+     user.Email,
+     "Verify Your Email - JobGenius",
+     $@"
+    <html>
+    <head>
+        <style>
+            body {{
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #f4f4f4;
+                padding: 20px;
+            }}
+            .container {{
+                background-color: #ffffff;
+                border-radius: 8px;
+                max-width: 600px;
+                margin: auto;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+                overflow: hidden;
+            }}
+            .header {{
+                background-color: #007BFF;
+                color: white;
+                padding: 20px;
+                text-align: center;
+            }}
+            .header h1 {{
+                margin: 0;
+                font-size: 24px;
+            }}
+            .content {{
+                padding: 30px;
+                text-align: center;
+            }}
+            .content p {{
+                font-size: 16px;
+                color: #333;
+            }}
+            .verification-code {{
+                display: inline-block;
+                margin-top: 20px;
+                padding: 10px 20px;
+                font-size: 20px;
+                color: #007BFF;
+                background-color: #eaf3ff;
+                border-radius: 5px;
+                font-weight: bold;
+                letter-spacing: 2px;
+            }}
+            .footer {{
+                background-color: #f0f0f0;
+                padding: 20px;
+                text-align: center;
+                font-size: 13px;
+                color: #666;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class='container'>
+            <div class='header'>
+                <h1>Welcome to JobGenius</h1>
+            </div>
+            <div class='content'>
+                <p>Hi {user.Fullname},</p>
+                <p>Thank you for joining <strong>JobGenius</strong>, your AI-powered career companion.</p>
+                <p>To activate your account, please use the verification code below:</p>
+                <div class='verification-code'>{verificationCode}</div>
+                <p>This code will expire in 1 hour. Please do not share it with anyone.</p>
+            </div>
+            <div class='footer'>
+                <p>&copy; {DateTime.Now.Year} JobGenius. All rights reserved.</p>
+                <p>Your future, guided by AI.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    ",
+     true
+ );
+
             if (!status)
                 return StatusCode(500, "Error: Message not sent");
             else
                 return Ok(new { Success = true, user.Verified, Message = "Account created successfully, verification code sent to email" });
         }
-
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(UserLoginDto dto)
@@ -107,6 +186,7 @@ namespace CareerAdvisorAPIs.Controllers
         }
 
 
+        [HttpPost("verify")]
         [HttpPost("verify-email")]
         public async Task<IActionResult> VerifyEmail(EmailVerificationDto verifyEmailDto)
         {
@@ -115,15 +195,15 @@ namespace CareerAdvisorAPIs.Controllers
 
             var user = await _unitOfWork.Users.GetByEmailAsync(verifyEmailDto.Email);
             if (user == null)
-                return BadRequest("No user found with that email");
+                return NotFound("No user found with that email");
             else if (user.Verified)
                 return BadRequest("Email already verified");
 
             var token = await _unitOfWork.Users.GetLastTokenByEmailAndNameAsync(verifyEmailDto.Email, "VerifyEmail");
             if (token == null)
-                return BadRequest("No token found for this user");
+                return NotFound("No token found for this user");
             else if (token.ExpireDate < DateTime.UtcNow)
-                return BadRequest("Token expired");
+                return Unauthorized("Token expired");
             else if (token.TokenValue != verifyEmailDto.VerificationCode)
             {
                 token.AvailableTries--;
@@ -131,12 +211,12 @@ namespace CareerAdvisorAPIs.Controllers
                 {
                     _unitOfWork.Tokens.Delete(token);
                     await _unitOfWork.SaveAsync();
-                    return BadRequest("Token expired");
+                    return Unauthorized("Token expired");
                 }
                 else
                 {
                     await _unitOfWork.SaveAsync();
-                    return BadRequest("Invalid verification code");
+                    return Unauthorized("Invalid verification code");
                 }
             }
             else
@@ -152,6 +232,7 @@ namespace CareerAdvisorAPIs.Controllers
             }
         }
 
+        [HttpPost("forgot-password")]
         [HttpPost("forgot-password-email")]
         public async Task<IActionResult> ForgotPasswordEmail(string email)
         {
@@ -178,7 +259,87 @@ namespace CareerAdvisorAPIs.Controllers
             await _unitOfWork.SaveAsync();
 
             // Send verification email
-            bool status = await _emailService.SendEmailAsync(user.Email, "Reset Your Password", $"Reset Code: {resetPasswordCode}.", false);
+            bool status = await _emailService.SendEmailAsync(
+                user.Email,
+                "Reset Your Password - JobGenius",
+                $@"
+    <html>
+    <head>
+        <style>
+            body {{
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #f7f8fa;
+                padding: 20px;
+            }}
+            .container {{
+                background-color: #ffffff;
+                border-radius: 10px;
+                max-width: 600px;
+                margin: auto;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+                overflow: hidden;
+            }}
+            .header {{
+                background-color: #343a40;
+                color: #ffffff;
+                padding: 25px;
+                text-align: center;
+            }}
+            .header h1 {{
+                margin: 0;
+                font-size: 22px;
+            }}
+            .content {{
+                padding: 30px;
+                text-align: center;
+            }}
+            .content p {{
+                font-size: 16px;
+                color: #444444;
+                line-height: 1.6;
+            }}
+            .reset-code {{
+                display: inline-block;
+                margin-top: 20px;
+                padding: 12px 24px;
+                font-size: 22px;
+                background-color: #007BFF;
+                color: white;
+                border-radius: 8px;
+                letter-spacing: 3px;
+                font-weight: bold;
+            }}
+            .footer {{
+                background-color: #f1f1f1;
+                text-align: center;
+                padding: 20px;
+                font-size: 13px;
+                color: #777;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class='container'>
+            <div class='header'>
+                <h1>Password Reset Request</h1>
+            </div>
+            <div class='content'>
+                <p>Hi {user.Fullname},</p>
+                <p>We received a request to reset your password for your <strong>JobGenius</strong> account.</p>
+                <p>Use the reset code below to proceed:</p>
+                <div class='reset-code'>{resetPasswordCode}</div>
+                <p>This code will expire in 1 hour. If you did not request a password reset, please ignore this email.</p>
+            </div>
+            <div class='footer'>
+                <p>&copy; {DateTime.Now.Year} JobGenius. All rights reserved.</p>
+                <p>Your future, guided by AI.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    ",
+                true
+            );
             if (!status)
                 return StatusCode(500, "Error: Message not sent");
             else
@@ -237,12 +398,12 @@ namespace CareerAdvisorAPIs.Controllers
             if (!ModelState.IsValid)
                 return BadRequest("Fields are not valid");
 
-            // Get the email from the authenticated user
-            var email = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
-            if (string.IsNullOrEmpty(email))
+            // Get the userId from the authenticated user
+            var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
                 return Unauthorized("Unauthorized user");
 
-            var user = await _unitOfWork.Users.GetByEmailAsync(email);
+            var user = await _unitOfWork.Users.GetByIdAsync(int.Parse(userId));
             if (user == null)
                 return NotFound("User not found");
 

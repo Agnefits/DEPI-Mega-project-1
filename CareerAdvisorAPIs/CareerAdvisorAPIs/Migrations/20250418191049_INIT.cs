@@ -206,7 +206,8 @@ namespace CareerAdvisorAPIs.Migrations
                     UserID = table.Column<int>(type: "int", nullable: false),
                     File = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FileName = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
-                    Date = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    Date = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ResumeFeedbackID = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -628,7 +629,8 @@ namespace CareerAdvisorAPIs.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_ResumeFeedbacks_ResumeID",
                 table: "ResumeFeedbacks",
-                column: "ResumeID");
+                column: "ResumeID",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Resumes_UserID",

@@ -48,6 +48,7 @@ namespace CareerAdvisorAPIs.Data
             base.OnModelCreating(modelBuilder);
 
             // Composite Keys
+
             modelBuilder.Entity<JobListingCategory>()
                 .HasKey(jc => new { jc.JobID, jc.CategoryID });
 
@@ -65,7 +66,139 @@ namespace CareerAdvisorAPIs.Data
 
             modelBuilder.Entity<NotificationSetting>()
                 .HasKey(ns => ns.UserID);
+
+            // One-to-One
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Profile)
+                .WithOne(p => p.User)
+                .HasForeignKey<Profile>(p => p.UserID);
+
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.NotificationSetting)
+                .WithOne(ns => ns.User)
+                .HasForeignKey<NotificationSetting>(ns => ns.UserID);
+
+            modelBuilder.Entity<Resume>()
+                .HasOne(r => r.ResumeFeedback)
+                .WithOne(rf => rf.Resume)
+                .HasForeignKey<ResumeFeedback>(rf => rf.ResumeID);
+
+            // One-to-Many
+            modelBuilder.Entity<Profile>()
+                .HasMany(p => p.UserSkills)
+                .WithOne(us => us.Profile)
+                .HasForeignKey(us => us.ProfileID);
+
+            modelBuilder.Entity<Profile>()
+                .HasMany(p => p.SocialLinks)
+                .WithOne(sl => sl.Profile)
+                .HasForeignKey(sl => sl.ProfileID);
+
+            modelBuilder.Entity<Profile>()
+                .HasMany(p => p.Portfolios)
+                .WithOne(po => po.Profile)
+                .HasForeignKey(po => po.ProfileID);
+
+            modelBuilder.Entity<Profile>()
+                .HasMany(p => p.Notifications)
+                .WithOne(n => n.Profile)
+                .HasForeignKey(n => n.ProfileID);
+
+            modelBuilder.Entity<Profile>()
+                .HasMany(p => p.UserLanguages)
+                .WithOne(ul => ul.Profile)
+                .HasForeignKey(ul => ul.ProfileID);
+
+            modelBuilder.Entity<Profile>()
+                .HasMany(p => p.Experiences)
+                .WithOne(e => e.Profile)
+                .HasForeignKey(e => e.ProfileID);
+
+            modelBuilder.Entity<Profile>()
+                .HasMany(p => p.Educations)
+                .WithOne(e => e.Profile)
+                .HasForeignKey(e => e.ProfileID);
+
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.Tokens)
+                .WithOne(t => t.User)
+                .HasForeignKey(t => t.UserID);
+
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.JobListings)
+                .WithOne(j => j.User)
+                .HasForeignKey(j => j.UserID);
+
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.SavedJobs)
+                .WithOne(sj => sj.User)
+                .HasForeignKey(sj => sj.UserID);
+
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.JobApplications)
+                .WithOne(ja => ja.User)
+                .HasForeignKey(ja => ja.UserID);
+
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.Resumes)
+                .WithOne(r => r.User)
+                .HasForeignKey(r => r.UserID);
+
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.InterviewSimulations)
+                .WithOne(ins => ins.User)
+                .HasForeignKey(ins => ins.UserID);
+
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.HelpEntries)
+                .WithOne(h => h.User)
+                .HasForeignKey(h => h.UserID);
+
+            modelBuilder.Entity<JobListing>()
+                .HasMany(j => j.JobListingSkills)
+                .WithOne(jls => jls.JobListing)
+                .HasForeignKey(jls => jls.JobID);
+
+            modelBuilder.Entity<JobListing>()
+                .HasMany(j => j.JobListingCategories)
+                .WithOne(jc => jc.JobListing)
+                .HasForeignKey(jc => jc.JobID);
+
+            modelBuilder.Entity<JobListing>()
+                .HasMany(j => j.JobBenefits)
+                .WithOne(jb => jb.JobListing)
+                .HasForeignKey(jb => jb.JobID);
+
+            modelBuilder.Entity<JobListing>()
+                .HasMany(j => j.JobApplications)
+                .WithOne(ja => ja.JobListing)
+                .HasForeignKey(ja => ja.JobID);
+
+            modelBuilder.Entity<JobListing>()
+                .HasMany(j => j.SavedJobs)
+                .WithOne(sj => sj.JobListing)
+                .HasForeignKey(sj => sj.JobID);
+
+            // Many-to-One
+            modelBuilder.Entity<JobListingSkill>()
+                .HasOne(jls => jls.Skill)
+                .WithMany(s => s.JobListingSkills)
+                .HasForeignKey(jls => jls.SkillID);
+
+            modelBuilder.Entity<JobListingCategory>()
+                .HasOne(jc => jc.JobCategory)
+                .WithMany(jlc => jlc.JobListingCategories)
+                .HasForeignKey(jc => jc.CategoryID);
+
+            modelBuilder.Entity<UserSkill>()
+                .HasOne(us => us.Skill)
+                .WithMany(s => s.UserSkills)
+                .HasForeignKey(us => us.SkillID);
+
+            modelBuilder.Entity<UserLanguage>()
+                .HasOne(ul => ul.Language)
+                .WithMany(l => l.UserLanguages)
+                .HasForeignKey(ul => ul.LanguageID);
         }
     }
-
 }

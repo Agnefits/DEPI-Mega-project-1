@@ -19,5 +19,9 @@ namespace CareerAdvisorAPIs.Models
         public DateTime Date { get; set; }
 
         public User User { get; set; }
+
+        [ForeignKey("ResumeFeedback")]
+        public int? ResumeFeedbackID { get; set; }
+        public ResumeFeedback ResumeFeedback { get; set; }
     }
 }

@@ -8,13 +8,20 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using CareerAdvisorAPIs.Services;
 using Microsoft.OpenApi.Models;
+using System.Text.Json.Serialization;
+using Swashbuckle.AspNetCore.SwaggerGen;
+using CareerAdvisorAPIs.Hubs;
 class Program
 {
     static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.Services.AddControllers();
+        builder.Services.AddControllers().AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+        });
+
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(options =>
         {
@@ -82,6 +89,8 @@ class Program
 
         builder.Services.AddAuthorization();
 
+        builder.Services.AddSignalR();
+
         var app = builder.Build();
 
         // Create the database and apply migrations
@@ -104,6 +113,8 @@ class Program
         // Use Authentication & Authorization
         app.UseAuthentication();
         app.UseAuthorization();
+
+        app.MapHub<NotificationHub>("/notificationHub");
 
         app.MapControllers();
 

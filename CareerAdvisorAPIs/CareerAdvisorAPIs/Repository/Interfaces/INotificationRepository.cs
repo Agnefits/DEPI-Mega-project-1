@@ -2,6 +2,8 @@
 
 namespace CareerAdvisorAPIs.Repository.Interfaces
 {
-    public interface INotificationRepository : IRepository<Notification> { }
-
+    public interface INotificationRepository : IRepository<Notification>
+    {
+        Task<IEnumerable<Notification>> GetAllByProfileIdAsync(int profileId);
+    }
 }

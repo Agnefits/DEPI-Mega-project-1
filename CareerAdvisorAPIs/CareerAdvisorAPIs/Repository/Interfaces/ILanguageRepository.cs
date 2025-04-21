@@ -2,6 +2,9 @@
 
 namespace CareerAdvisorAPIs.Repository.Interfaces
 {
-    public interface ILanguageRepository : IRepository<Language> { }
+    public interface ILanguageRepository : IRepository<Language>
+    {
+        Task<Language?> GetByNameAsync(string name);
+    }
 
 }

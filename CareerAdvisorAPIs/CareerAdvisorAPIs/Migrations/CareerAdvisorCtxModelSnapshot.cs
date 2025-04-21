@@ -546,6 +546,9 @@ namespace CareerAdvisorAPIs.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
+                    b.Property<int?>("ResumeFeedbackID")
+                        .HasColumnType("int");
+
                     b.Property<int>("UserID")
                         .HasColumnType("int");
 
@@ -576,7 +579,8 @@ namespace CareerAdvisorAPIs.Migrations
 
                     b.HasKey("FeedbackID");
 
-                    b.HasIndex("ResumeID");
+                    b.HasIndex("ResumeID")
+                        .IsUnique();
 
                     b.ToTable("ResumeFeedbacks");
                 });
@@ -760,7 +764,7 @@ namespace CareerAdvisorAPIs.Migrations
             modelBuilder.Entity("CareerAdvisorAPIs.Models.Education", b =>
                 {
                     b.HasOne("CareerAdvisorAPIs.Models.Profile", "Profile")
-                        .WithMany()
+                        .WithMany("Educations")
                         .HasForeignKey("ProfileID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -771,7 +775,7 @@ namespace CareerAdvisorAPIs.Migrations
             modelBuilder.Entity("CareerAdvisorAPIs.Models.Experience", b =>
                 {
                     b.HasOne("CareerAdvisorAPIs.Models.Profile", "Profile")
-                        .WithMany()
+                        .WithMany("Experiences")
                         .HasForeignKey("ProfileID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -883,7 +887,7 @@ namespace CareerAdvisorAPIs.Migrations
             modelBuilder.Entity("CareerAdvisorAPIs.Models.Notification", b =>
                 {
                     b.HasOne("CareerAdvisorAPIs.Models.Profile", "Profile")
-                        .WithMany()
+                        .WithMany("Notifications")
                         .HasForeignKey("ProfileID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -905,7 +909,7 @@ namespace CareerAdvisorAPIs.Migrations
             modelBuilder.Entity("CareerAdvisorAPIs.Models.Portfolio", b =>
                 {
                     b.HasOne("CareerAdvisorAPIs.Models.Profile", "Profile")
-                        .WithMany()
+                        .WithMany("Portfolios")
                         .HasForeignKey("ProfileID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -938,8 +942,8 @@ namespace CareerAdvisorAPIs.Migrations
             modelBuilder.Entity("CareerAdvisorAPIs.Models.ResumeFeedback", b =>
                 {
                     b.HasOne("CareerAdvisorAPIs.Models.Resume", "Resume")
-                        .WithMany()
-                        .HasForeignKey("ResumeID")
+                        .WithOne("ResumeFeedback")
+                        .HasForeignKey("CareerAdvisorAPIs.Models.ResumeFeedback", "ResumeID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -968,7 +972,7 @@ namespace CareerAdvisorAPIs.Migrations
             modelBuilder.Entity("CareerAdvisorAPIs.Models.SocialLink", b =>
                 {
                     b.HasOne("CareerAdvisorAPIs.Models.Profile", "Profile")
-                        .WithMany()
+                        .WithMany("SocialLinks")
                         .HasForeignKey("ProfileID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -990,13 +994,13 @@ namespace CareerAdvisorAPIs.Migrations
             modelBuilder.Entity("CareerAdvisorAPIs.Models.UserLanguage", b =>
                 {
                     b.HasOne("CareerAdvisorAPIs.Models.Language", "Language")
-                        .WithMany()
+                        .WithMany("UserLanguages")
                         .HasForeignKey("LanguageID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("CareerAdvisorAPIs.Models.Profile", "Profile")
-                        .WithMany()
+                        .WithMany("UserLanguages")
                         .HasForeignKey("ProfileID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1009,7 +1013,7 @@ namespace CareerAdvisorAPIs.Migrations
             modelBuilder.Entity("CareerAdvisorAPIs.Models.UserSkill", b =>
                 {
                     b.HasOne("CareerAdvisorAPIs.Models.Profile", "Profile")
-                        .WithMany()
+                        .WithMany("UserSkills")
                         .HasForeignKey("ProfileID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1041,6 +1045,34 @@ namespace CareerAdvisorAPIs.Migrations
                     b.Navigation("JobListingSkills");
 
                     b.Navigation("SavedJobs");
+                });
+
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.Language", b =>
+                {
+                    b.Navigation("UserLanguages");
+                });
+
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.Profile", b =>
+                {
+                    b.Navigation("Educations");
+
+                    b.Navigation("Experiences");
+
+                    b.Navigation("Notifications");
+
+                    b.Navigation("Portfolios");
+
+                    b.Navigation("SocialLinks");
+
+                    b.Navigation("UserLanguages");
+
+                    b.Navigation("UserSkills");
+                });
+
+            modelBuilder.Entity("CareerAdvisorAPIs.Models.Resume", b =>
+                {
+                    b.Navigation("ResumeFeedback")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("CareerAdvisorAPIs.Models.Skill", b =>
