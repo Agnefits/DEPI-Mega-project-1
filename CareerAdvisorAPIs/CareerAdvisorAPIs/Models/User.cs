@@ -22,9 +22,6 @@ namespace CareerAdvisorAPIs.Models
 
         public bool Verified { get; set; }
 
-        [Required, MaxLength(50)]
-        public string Role { get; set; }
-
         public DateTime CreationDate { get; set; }
 
         public bool IsDeleted { get; set; } = false;

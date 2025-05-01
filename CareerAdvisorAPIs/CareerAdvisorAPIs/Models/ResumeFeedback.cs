@@ -11,9 +11,11 @@ namespace CareerAdvisorAPIs.Models
         [ForeignKey("Resume")]
         public int ResumeID { get; set; }
 
-        public string FeedbackText { get; set; }
+        public string? FeedbackText { get; set; }
 
         public decimal Score { get; set; }
+
+        public string? WeightsJson { get; set; }
 
         public Resume Resume { get; set; }
     }

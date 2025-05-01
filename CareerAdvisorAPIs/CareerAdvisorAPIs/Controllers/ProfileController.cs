@@ -84,6 +84,7 @@ namespace CareerAdvisorAPIs.Controllers
                 // If profile doesn't exist, create one
                 profile = new Profile { UserID = user.UserID };
                 await _unitOfWork.Profiles.AddAsync(profile);
+                await _unitOfWork.SaveAsync();
             }
 
             // Update profile fields

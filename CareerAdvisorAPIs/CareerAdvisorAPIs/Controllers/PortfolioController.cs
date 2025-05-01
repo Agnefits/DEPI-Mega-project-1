@@ -73,13 +73,16 @@ namespace CareerAdvisorAPIs.Controllers
                 Description = addPortfolio.Description,
                 Date = addPortfolio.Date
             };
+
+            await _unitOfWork.Portfolios.AddAsync(portfolio);
+            await _unitOfWork.SaveAsync();
+
             if (addPortfolio.Image != null)
             {
                 var imagePath = await FileService.SaveFile($"Portfolios/{portfolio.PortfolioID}/images", addPortfolio.Image);
                 portfolio.Image = imagePath; // Save the file path in the database
             }
 
-            await _unitOfWork.Portfolios.AddAsync(portfolio);
             await _unitOfWork.SaveAsync();
             return Ok(new
             {

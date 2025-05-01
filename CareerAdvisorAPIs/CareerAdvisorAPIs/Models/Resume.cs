@@ -16,6 +16,8 @@ namespace CareerAdvisorAPIs.Models
         [MaxLength(150)]
         public string FileName { get; set; }
 
+        public string JobDescription { get; set; }
+
         public DateTime Date { get; set; }
 
         public User User { get; set; }

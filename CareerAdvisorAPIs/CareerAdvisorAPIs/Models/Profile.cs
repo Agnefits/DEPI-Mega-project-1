@@ -28,6 +28,8 @@ namespace CareerAdvisorAPIs.Models
         [MaxLength(20)]
         public string? Type { get; set; }
 
+        public string? WeightsJson { get; set; }
+
         public User User { get; set; }
 
         public ICollection<UserSkill> UserSkills { get; set; }

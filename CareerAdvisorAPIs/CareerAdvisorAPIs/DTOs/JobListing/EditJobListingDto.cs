@@ -1,20 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace CareerAdvisorAPIs.Models
+namespace CareerAdvisorAPIs.DTOs.JobListing
 {
-    public class JobListing
+    public class EditJobListingDto
     {
-        [Key]
-        public int JobID { get; set; }
-
-        [ForeignKey("User")]
-        public int UserID { get; set; }
-
         [Required, MaxLength(200)]
         public string Title { get; set; }
 
-        [MaxLength(150)]
+        [Required, MaxLength(150)]
         public string Company { get; set; }
 
         [MaxLength(100)]
@@ -25,29 +18,28 @@ namespace CareerAdvisorAPIs.Models
 
         [MaxLength(50)]
         public string? Type { get; set; }
+
         public string? Description { get; set; }
         public string? Responsibilities { get; set; }
         public string? WhoYouAre { get; set; }
         public string? NiceToHaves { get; set; }
+
         public int? Capacity { get; set; }
+
         public DateTime? ApplyBefore { get; set; }
-        public DateTime? JobPostedOn { get; set; }
         public decimal? SalaryFrom { get; set; }
         public decimal? SalaryTo { get; set; }
 
-        [MaxLength(200)]
+        [Url]
         public string? CompanyWebsite { get; set; }
+
         public string? Keywords { get; set; }
         public string? AdditionalInformation { get; set; }
         public string? CompanyPapers { get; set; }
 
-        public string? WeightsJson { get; set; }
+        public List<string>? Categories { get; set; }
+        public List<string>? Skills { get; set; }
 
-        public User User { get; set; }
-        public ICollection<JobListingCategory> JobListingCategories { get; set; }
-        public ICollection<JobListingSkill> JobListingSkills { get; set; }
-        public ICollection<JobBenefit> JobBenefits { get; set; }
-        public ICollection<JobApplication> JobApplications { get; set; }
-        public ICollection<SavedJob> SavedJobs { get; set; }
+        public List<JobBenefitDto>? JobBenefits { get; set; }
     }
 }

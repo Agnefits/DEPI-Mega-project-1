@@ -54,7 +54,6 @@ namespace CareerAdvisorAPIs.Controllers
                     Email = dto.Email,
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                     Provider = "Email",
-                    Role = dto.Role,
                     CreationDate = DateTime.UtcNow
                 };
                 await _unitOfWork.Users.AddAsync(user);
@@ -64,7 +63,6 @@ namespace CareerAdvisorAPIs.Controllers
                 user.Fullname = dto.FullName;
                 user.Email = dto.Email;
                 user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
-                user.Fullname = dto.Role;
                 user.CreationDate = DateTime.UtcNow;
                 _unitOfWork.Users.Update(user);
             }

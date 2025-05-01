@@ -26,8 +26,6 @@ namespace CareerAdvisorAPIs.DTOs.Profile
 
         public string Provider { get; set; }
 
-        public string Role { get; set; }
-
         public ICollection<string> UserSkills { get; set; }
         public ICollection<SocialLinkResponseDto> SocialLinks { get; set; }
         public ICollection<string> UserLanguages { get; set; }
@@ -47,7 +45,6 @@ namespace CareerAdvisorAPIs.DTOs.Profile
             Fullname = profile.User?.Fullname;
             Email = profile.User?.Email;
             Provider = profile.User?.Provider;
-            Role = profile.User?.Role;
 
             // Mapping related collections
             UserSkills = profile.UserSkills.Select(us => us.Skill.Name).ToList() ?? new List<string>();

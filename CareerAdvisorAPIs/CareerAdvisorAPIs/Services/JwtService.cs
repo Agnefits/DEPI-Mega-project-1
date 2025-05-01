@@ -48,7 +48,6 @@ namespace CareerAdvisorAPIs.Services
                         new Claim(ClaimTypes.NameIdentifier, user.UserID.ToString()),
                         new Claim(ClaimTypes.Email, user.Email),
                         new Claim(ClaimTypes.Name, user.Fullname),
-                        new Claim(ClaimTypes.Role, user.Role)
                     }),
                     Expires = tokenExpiryTimeStamp,
                     Issuer = issuer,
