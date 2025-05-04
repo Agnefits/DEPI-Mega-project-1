@@ -12,7 +12,7 @@ namespace CareerAdvisorAPIs.Controllers
     [Authorize]
     [ApiController]
     [Route("api/JobListing")]
-    public class JobListingController : ControllerBase
+    public partial class JobListingController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
         public JobListingController(IUnitOfWork unitOfWork)
@@ -401,6 +401,8 @@ namespace CareerAdvisorAPIs.Controllers
                 return NotFound("Job not found or access denied");
 
             _unitOfWork.JobListings.Delete(job);
+            await _unitOfWork.SaveAsync();
+
             return Ok(new { Success = true, message = "Job removed successfully" });
         }
 

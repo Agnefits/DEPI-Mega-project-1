@@ -359,6 +359,8 @@ namespace CareerAdvisorAPIs.Controllers
             }
 
             _unitOfWork.JobApplications.Delete(application);
+            await _unitOfWork.SaveAsync();
+
             return Ok(new { Success = true, message = "Application removed successfully" });
         }
 
