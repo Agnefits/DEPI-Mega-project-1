@@ -293,7 +293,7 @@ namespace CareerAdvisorAPIs.Controllers
                 WhoYouAre = job.WhoYouAre,
                 NiceToHaves = job.NiceToHaves,
                 Capacity = job.Capacity,
-                ApplicationSent = job.JobApplications.Count(),
+                ApplicationSent = 0,
                 ApplyBefore = job.ApplyBefore,
                 JobPostedOn = job.JobPostedOn,
                 SalaryFrom = job.SalaryFrom,
