@@ -2,6 +2,7 @@
 using CareerAdvisorAPIs.DTOs.JobListing;
 using CareerAdvisorAPIs.Models;
 using CareerAdvisorAPIs.Repository.Interfaces;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -98,6 +99,37 @@ namespace CareerAdvisorAPIs.Repository.Classes
                     DateTime.UtcNow <= j.ApplyBefore && // Check if the job is still open for applications.
                     (j.Capacity == null || j.JobApplications.Count() < j.Capacity) // Ensure job capacity isn't full.
                 ).ToListAsync();
+        }
+
+        public async Task<IEnumerable<JobListing>> FilterAsync(FilterJobListingDto dto)
+        {
+            var query = _context.JobListings
+                .Include(j => j.User)
+                .Include(j => j.JobApplications).ThenInclude(ja => ja.User)
+                .Include(j => j.JobListingCategories).ThenInclude(jc => jc.JobCategory)
+                .Include(j => j.JobListingSkills).ThenInclude(js => js.Skill)
+                .Include(j => j.JobBenefits)
+                .AsQueryable();
+            if (dto.Categories != null && dto.Categories.Any())
+            {
+                query = query.Where(j =>
+                    j.JobListingCategories.Any(c => dto.Categories.Contains(c.JobCategory.Name)));
+            }
+            if (dto.Types != null && dto.Types.Any())
+            {
+                query = query.Where(j =>
+                    j.JobListingSkills.Any(s => dto.Types.Contains(s.JobListing.Type ?? "")));
+            }
+            if (dto.SalaryFrom != null)
+            {
+                query = query.Where(j=> j.SalaryFrom >= dto.SalaryFrom);
+            }
+            if (dto.SalaryTo != null)
+            {
+                query = query.Where(j => j.SalaryTo <= dto.SalaryTo);
+            }
+
+            return await query.ToListAsync();
         }
 
         public async Task<JobListing?> GetDetailedByIdAsync(int id) =>
