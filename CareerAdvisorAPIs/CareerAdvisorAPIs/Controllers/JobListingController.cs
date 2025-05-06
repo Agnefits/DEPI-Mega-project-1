@@ -310,7 +310,15 @@ namespace CareerAdvisorAPIs.Controllers
                 ApplyBefore = dto.ApplyBefore,
                 SalaryFrom = dto.SalaryFrom,
                 SalaryTo = dto.SalaryTo,
-                JobPostedOn = DateTime.UtcNow
+                AdditionalInformation = dto.AdditionalInformation,
+                CompanyWebsite = dto.CompanyWebsite,
+                Keywords = dto.Keywords,
+                CompanyPapers = dto.CompanyPapers,
+                Responsibilities = dto.Responsibilities,
+                WhoYouAre = dto.WhoYouAre,
+                NiceToHaves = dto.NiceToHaves,
+                Capacity = dto.Capacity,
+                JobPostedOn = DateTime.UtcNow,
             };
 
 

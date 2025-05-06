@@ -39,34 +39,48 @@ namespace CareerAdvisorAPIs.Repository.Classes
 
         private async Task AddRelationsAsync(JobListing job, List<string> categories, List<string> skills, List<JobBenefit> benefits)
         {
-            foreach (var name in categories.Distinct())
+            foreach (var name in categories.Distinct(StringComparer.OrdinalIgnoreCase))
             {
-                var cat = await _context.JobCategories.FirstOrDefaultAsync(c => c.Name == name)
-                          ?? new JobCategory { Name = name };
-                if (cat.CategoryID == 0)
+                try
                 {
-                    _context.JobCategories.Add(cat);
-                    await _context.SaveChangesAsync();
+                    var cat = await _context.JobCategories.FirstOrDefaultAsync(c => c.Name.ToLower() == name.ToLower())
+                              ?? new JobCategory { Name = name };
+                    if (cat.CategoryID == 0)
+                    {
+                        await _context.JobCategories.AddAsync(cat);
+                        await _context.SaveChangesAsync();
+                    }
+
+                    await _context.JobListingCategories.AddAsync(new JobListingCategory { JobID = job.JobID, CategoryID = cat.CategoryID });
                 }
-                _context.JobListingCategories.Add(new JobListingCategory { JobID = job.JobID, CategoryID = cat.CategoryID });
+                catch { }
             }
 
-            foreach (var name in skills.Distinct())
+            foreach (var name in skills.Distinct(StringComparer.OrdinalIgnoreCase))
             {
-                var skill = await _context.Skills.FirstOrDefaultAsync(s => s.Name == name)
-                            ?? new Skill { Name = name };
-                if (skill.SkillID == 0)
+                try
                 {
-                    _context.Skills.Add(skill);
-                    await _context.SaveChangesAsync();
+                    var skill = await _context.Skills.FirstOrDefaultAsync(s => s.Name.ToLower() == name.ToLower())
+                            ?? new Skill { Name = name };
+                    if (skill.SkillID == 0)
+                    {
+                        await _context.Skills.AddAsync(skill);
+                        await _context.SaveChangesAsync();
+                    }
+
+                    await _context.JobListingSkills.AddAsync(new JobListingSkill { JobID = job.JobID, SkillID = skill.SkillID });
                 }
-                _context.JobListingSkills.Add(new JobListingSkill { JobID = job.JobID, SkillID = skill.SkillID });
+                catch { }
             }
 
             foreach (var b in benefits)
             {
-                b.JobID = job.JobID;
-                _context.JobBenefits.Add(b);
+                try
+                {
+                    b.JobID = job.JobID;
+                    await _context.JobBenefits.AddAsync(b);
+                }
+                catch { }
             }
 
             await _context.SaveChangesAsync();
@@ -122,7 +136,7 @@ namespace CareerAdvisorAPIs.Repository.Classes
             }
             if (dto.SalaryFrom != null)
             {
-                query = query.Where(j=> j.SalaryFrom >= dto.SalaryFrom);
+                query = query.Where(j => j.SalaryFrom >= dto.SalaryFrom);
             }
             if (dto.SalaryTo != null)
             {

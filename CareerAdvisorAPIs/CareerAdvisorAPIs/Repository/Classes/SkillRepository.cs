@@ -11,7 +11,7 @@ namespace CareerAdvisorAPIs.Repository.Classes
 
         public async Task<Skill?> GetByNameAsync(string name)
         {
-            return await _context.Skills.FirstOrDefaultAsync(x => x.Name == name);
+            return await _context.Skills.FirstOrDefaultAsync(x => x.Name.ToLower() == name.ToLower());
         }
     }
 }
