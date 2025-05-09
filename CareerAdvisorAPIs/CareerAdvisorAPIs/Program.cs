@@ -65,8 +65,8 @@ class Program
         builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-        builder.Services.AddScoped<JwtService>();
-        builder.Services.AddScoped<EmailService>();
+        builder.Services.AddScoped<IJwtService, JwtService>();
+        builder.Services.AddScoped<IEmailService, EmailService>();
 
         // Add DbContext
         builder.Services.AddDbContext<CareerAdvisorCtx>(options =>

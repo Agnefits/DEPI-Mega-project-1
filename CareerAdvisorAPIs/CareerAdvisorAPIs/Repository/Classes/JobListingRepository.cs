@@ -2,9 +2,11 @@
 using CareerAdvisorAPIs.DTOs.JobListing;
 using CareerAdvisorAPIs.Models;
 using CareerAdvisorAPIs.Repository.Interfaces;
+using CareerAdvisorAPIs.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
 
 namespace CareerAdvisorAPIs.Repository.Classes
 {
@@ -17,6 +19,30 @@ namespace CareerAdvisorAPIs.Repository.Classes
             await _context.SaveChangesAsync();
 
             await AddRelationsAsync(job, categories, skills, benefits);
+
+            // Send to AI job model
+
+            var aiRequest = new JobAIRequestDto
+            {
+                job_id = job.JobID,
+                description = "title: " + job.Title +
+                "\r\nkeywords: " + (job.Keywords ?? "Empty") +
+                "\r\ncategories: " + string.Join(", ", job.JobListingCategories.Select(jc => jc.JobCategory.Name)) +
+                "\r\ntype: " + (job.Type ?? "Empty") +
+                "\r\nrequired skills: " + string.Join(", ", job.JobListingSkills) +
+                "\r\nnice to have: " + (/*job.NiceToHaves ?? ""*/"Empty") +
+                "\r\nresponsibilities: " + (job.Responsibilities ?? "Empty") +
+                "\r\ndescription: " + (job.Description ?? "Empty") +
+                "\r\nwho you are: " + (/*job.WhoYouAre ?? ""*/"Empty"),
+            };
+
+            var aiResponse = await JobAIModelService.PostJobAsync(aiRequest);
+
+            if (aiResponse != null)
+            {
+                job.WeightsJson = aiResponse.embedding.ToString();
+                await _context.SaveChangesAsync();
+            }
         }
 
         public async Task UpdateAsync(JobListing job, List<string> categories, List<string> skills, List<JobBenefit> benefits)
@@ -35,6 +61,31 @@ namespace CareerAdvisorAPIs.Repository.Classes
             await _context.SaveChangesAsync();
 
             await AddRelationsAsync(job, categories, skills, benefits);
+
+
+            // Send to AI job model
+
+            var aiRequest = new JobAIRequestDto
+            {
+                job_id = job.JobID,
+                description = "title: " + job.Title +
+                "\r\nkeywords: " + (job.Keywords ?? "Empty") +
+                "\r\ncategories: " + string.Join(", ", job.JobListingCategories.Select(jc => jc.JobCategory.Name)) +
+                "\r\ntype: " + (job.Type ?? "Empty") +
+                "\r\nrequired skills: " + string.Join(", ", job.JobListingSkills) +
+                "\r\nnice to have: " + (/*job.NiceToHaves ?? ""*/"Empty") +
+                "\r\nresponsibilities: " + (job.Responsibilities ?? "Empty") +
+                "\r\ndescription: " + (job.Description ?? "Empty") +
+                "\r\nwho you are: " + (/*job.WhoYouAre ?? ""*/"Empty"),
+            };
+
+            var aiResponse = await JobAIModelService.PostJobAsync(aiRequest);
+
+            if (aiResponse != null)
+            {
+                job.WeightsJson = JsonConvert.SerializeObject(aiResponse.embedding);
+                await _context.SaveChangesAsync();
+            }
         }
 
         private async Task AddRelationsAsync(JobListing job, List<string> categories, List<string> skills, List<JobBenefit> benefits)
@@ -142,6 +193,18 @@ namespace CareerAdvisorAPIs.Repository.Classes
             {
                 query = query.Where(j => j.SalaryTo <= dto.SalaryTo);
             }
+
+            return await query.ToListAsync();
+        }
+        public async Task<IEnumerable<JobListing>> RecommendAsync(int userId)
+        {
+            var query = _context.JobListings
+                .Include(j => j.User)
+                .Include(j => j.JobApplications).ThenInclude(ja => ja.User)
+                .Include(j => j.JobListingCategories).ThenInclude(jc => jc.JobCategory)
+                .Include(j => j.JobListingSkills).ThenInclude(js => js.Skill)
+                .Include(j => j.JobBenefits)
+                .AsQueryable();
 
             return await query.ToListAsync();
         }

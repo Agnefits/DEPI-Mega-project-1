@@ -1,4 +1,5 @@
-﻿using CareerAdvisorAPIs.Models;
+﻿using CareerAdvisorAPIs.DTOs.Profile;
+using CareerAdvisorAPIs.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
@@ -44,7 +45,7 @@ namespace CareerAdvisorAPIs.Controllers
             await _unitOfWork.UserLanguages.AddAsync(userLanguage);
             await _unitOfWork.SaveAsync();
 
-            return Ok(new { Success = true, message = "Language added successfully", languageName });
+            return Ok(new LanguageResponseDto { Success = true, Message = "Language added successfully", LanguageName = languageName });
         }
 
         [HttpDelete("language")]
@@ -71,7 +72,7 @@ namespace CareerAdvisorAPIs.Controllers
 
             await _unitOfWork.SaveAsync();
 
-            return Ok(new { Success = true, message = "Language removed successfully" });
+            return Ok(new LanguageResponseDto { Success = true, Message = "Language removed successfully" });
         }
     }
 }

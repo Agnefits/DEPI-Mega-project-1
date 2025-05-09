@@ -4,7 +4,6 @@ using System.Security.Claims;
 using CareerAdvisorAPIs.Models;
 using CareerAdvisorAPIs.Repository.Interfaces;
 using CareerAdvisorAPIs.DTOs.Education;
-using CareerAdvisorAPIs.Services;
 
 namespace CareerAdvisorAPIs.Controllers
 {

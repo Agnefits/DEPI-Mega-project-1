@@ -283,6 +283,51 @@ namespace CareerAdvisorAPIs.Controllers
             return Ok(dtos);
         }
 
+        [HttpPost("Recommend")]
+        public async Task<IActionResult> Recommend()
+        {
+            var (user, profile, error) = await GetAuthenticatedUserAndProfileAsync();
+            if (error != null) return error;
+
+            var jobs = await _unitOfWork.JobListings.RecommendAsync(user.UserID);
+
+            var dtos = jobs.Select(job => new JobListingDto
+            {
+                JobID = job.JobID,
+                UserID = job.UserID,
+                Email = job.User.Email,
+                Fullname = job.User.Fullname,
+                Title = job.Title,
+                Company = job.Company,
+                City = job.City,
+                Country = job.Country,
+                Type = job.Type,
+                Description = job.Description,
+                Responsibilities = job.Responsibilities,
+                WhoYouAre = job.WhoYouAre,
+                NiceToHaves = job.NiceToHaves,
+                Capacity = job.Capacity,
+                ApplicationSent = job.JobApplications.Count(),
+                ApplyBefore = job.ApplyBefore,
+                JobPostedOn = job.JobPostedOn,
+                SalaryFrom = job.SalaryFrom,
+                SalaryTo = job.SalaryTo,
+                CompanyWebsite = job.CompanyWebsite,
+                Keywords = job.Keywords,
+                AdditionalInformation = job.AdditionalInformation,
+                CompanyPapers = job.CompanyPapers,
+                Categories = job.JobListingCategories.Select(c => c.JobCategory.Name).ToList(),
+                Skills = job.JobListingSkills.Select(s => s.Skill.Name).ToList(),
+                JobBenefits = job.JobBenefits.Select(b => new JobBenefitDto
+                {
+                    Title = b.Title,
+                    Description = b.Description,
+                }).ToList()
+            }).ToList();
+
+            return Ok(dtos);
+        }
+
         [HttpPost]
         public async Task<IActionResult> Add(CreateJobListingDto dto)
         {

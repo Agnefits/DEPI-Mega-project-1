@@ -1,11 +1,12 @@
 ﻿using System.Net;
 using System.Net.Mail;
 using System.Threading.Tasks;
+using CareerAdvisorAPIs.Services;
 using Microsoft.Extensions.Configuration;
 
 namespace CareerAdvisorAPIs.Helpers
 {
-    public class EmailService
+    public class EmailService : IEmailService
     {
         private readonly IConfiguration _config;
 

@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using CareerAdvisorAPIs.DTOs.JobListing;
-using static System.Net.Mime.MediaTypeNames;
 using CareerAdvisorAPIs.Services;
 using Microsoft.AspNetCore.StaticFiles;
 
@@ -104,7 +103,7 @@ namespace CareerAdvisorAPIs.Controllers
 
             var application = await _unitOfWork.JobApplications.GetDetailedByIdAsync(id);
 
-            if (application.UserID != user.UserID || application.JobListing.UserID != user.UserID)
+            if (application.UserID != user.UserID && application.JobListing.UserID != user.UserID)
                 return NotFound("Application not found or access denied");
 
             var dto = new JobApplicationDto

@@ -1,5 +1,9 @@
-﻿using CareerAdvisorAPIs.Models;
+﻿using CareerAdvisorAPIs.DTOs.JobListing;
+using CareerAdvisorAPIs.DTOs.Profile;
+using CareerAdvisorAPIs.Models;
+using CareerAdvisorAPIs.Services;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 
@@ -41,10 +45,21 @@ namespace CareerAdvisorAPIs.Controllers
                 SkillID = skill.SkillID
             };
 
+            // Send skills to AI Model
+            var aiRequest = new UserAIRequestDto
+            {
+                user_id = user.UserID,
+                skills = profile.UserSkills.Select(us => us.Skill.Name).ToList()
+            };
+
+            var aiModelResponse = await JobAIModelService.PostUserAsync(aiRequest);
+            if (aiModelResponse != null)
+                profile.WeightsJson = JsonConvert.SerializeObject(aiModelResponse.embedding);
+
             await _unitOfWork.UserSkills.AddAsync(userSkill);
             await _unitOfWork.SaveAsync();
 
-            return Ok(new { Success = true, message = "Skill added successfully", skillName });
+            return Ok(new SkillResponseDto { Success = true, Message = "Skill added successfully", SkillName =  skillName });
         }
 
         [HttpDelete("skill")]
@@ -66,12 +81,23 @@ namespace CareerAdvisorAPIs.Controllers
 
             // Remove the skill from the user's profile
             bool deleted = await _unitOfWork.UserSkills.Delete(profile.ProfileID, skill.SkillID);
-            if(!deleted)
+            if (!deleted)
                 return NotFound("User does not have this skill");
+
+            // Send skills to AI Model
+            var aiRequest = new UserAIRequestDto
+            {
+                user_id = user.UserID,
+                skills = profile.UserSkills.Select(us => us.Skill.Name).ToList()
+            };
+
+            var aiModelResponse = await JobAIModelService.PostUserAsync(aiRequest);
+            if (aiModelResponse != null)
+                profile.WeightsJson = JsonConvert.SerializeObject(aiModelResponse.embedding);
 
             await _unitOfWork.SaveAsync();
 
-            return Ok(new { Success = true, message = "Skill removed successfully" });
+            return Ok(new SkillResponseDto { Success = true, Message = "Skill removed successfully" });
         }
     }
 }
