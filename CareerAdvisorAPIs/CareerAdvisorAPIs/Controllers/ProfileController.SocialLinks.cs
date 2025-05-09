@@ -26,7 +26,7 @@ namespace CareerAdvisorAPIs.Controllers
             await _unitOfWork.SocialLinks.AddAsync(link);
             await _unitOfWork.SaveAsync();
 
-            return Ok(new { Success = true, message = "Social link added successfully", SocialLink = new SocialLinkResponseDto { LinkID = link.LinkID, Link = link.Link, Platform = link.Platform } });
+            return Ok(new SocialResponseDto{ Success = true, Message = "Social link added successfully", SocialLink = new SocialLinkResponseDto { LinkID = link.LinkID, Link = link.Link, Platform = link.Platform } });
         }
 
         [HttpPut("sociallink/{id}")]
@@ -48,7 +48,7 @@ namespace CareerAdvisorAPIs.Controllers
             _unitOfWork.SocialLinks.Update(existingLink);
             await _unitOfWork.SaveAsync();
 
-            return Ok(new { Success = true, message = "Social link updated successfully", SocialLink = new SocialLinkResponseDto { LinkID = existingLink.LinkID, Link = existingLink.Link, Platform = existingLink.Platform } });
+            return Ok(new SocialResponseDto { Success = true, Message = "Social link updated successfully", SocialLink = new SocialLinkResponseDto { LinkID = existingLink.LinkID, Link = existingLink.Link, Platform = existingLink.Platform } });
         }
 
         [HttpDelete("sociallink/{id}")]
@@ -64,7 +64,7 @@ namespace CareerAdvisorAPIs.Controllers
             _unitOfWork.SocialLinks.Delete(link);
             await _unitOfWork.SaveAsync();
 
-            return Ok(new { Success = true, message = "Social link deleted successfully" });
+            return Ok(new SocialResponseDto { Success = true, Message = "Social link deleted successfully" });
         }
     }
 }

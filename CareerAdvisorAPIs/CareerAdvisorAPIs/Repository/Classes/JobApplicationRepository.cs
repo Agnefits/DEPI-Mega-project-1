@@ -41,6 +41,7 @@ namespace CareerAdvisorAPIs.Repository.Classes
                                          .ThenInclude(js => js.Skill)
                                  .Include(j => j.JobListing)
                                      .ThenInclude(j => j.JobBenefits)
+                                     .Where(ja=> ja.UserID == userId)
                                  .ToListAsync();
         }
     }

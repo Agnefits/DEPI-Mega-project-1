@@ -1,0 +1,26 @@
+fastapi==0.110.0
+uvicorn[standard]==0.29.0         # Optional, for local dev/testing
+python-dotenv==1.0.1              # Optional, only if you use a .env file
+numpy==1.26.4
+pandas==1.5.3
+scikit-learn==1.4.1.post1
+sentence-transformers==2.5.1
+re==2.2.1
+
+# === Core API Framework ===
+fastapi==0.110.0
+uvicorn[standard]==0.29.0
+pydantic==2.6.3
+
+# === AI / NLP Models ===
+sentence-transformers==2.5.1        # SBERT for semantic embeddings
+scikit-learn==1.4.1.post1           # For cosine similarity
+numpy==1.26.4                       # For numerical operations
+
+# === Environment Handling ===
+python-dotenv==1.0.1
+
+# === Linting & Formatting (optional) ===
+black==24.3.0
+flake8==7.0.0
+

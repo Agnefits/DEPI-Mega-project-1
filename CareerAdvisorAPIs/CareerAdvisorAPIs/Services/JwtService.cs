@@ -7,7 +7,7 @@ using System.Text;
 
 namespace CareerAdvisorAPIs.Services
 {
-    public class JwtService
+    public class JwtService : IJwtService
     {
         private IUnitOfWork _unitOfWork;
         private IConfiguration _configuration;

@@ -2,8 +2,11 @@
 using CareerAdvisorAPIs.DTOs.JobListing;
 using CareerAdvisorAPIs.Models;
 using CareerAdvisorAPIs.Repository.Interfaces;
+using CareerAdvisorAPIs.Services;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
 
 namespace CareerAdvisorAPIs.Repository.Classes
 {
@@ -16,6 +19,30 @@ namespace CareerAdvisorAPIs.Repository.Classes
             await _context.SaveChangesAsync();
 
             await AddRelationsAsync(job, categories, skills, benefits);
+
+            // Send to AI job model
+
+            var aiRequest = new JobAIRequestDto
+            {
+                job_id = job.JobID,
+                description = "title: " + job.Title +
+                "\r\nkeywords: " + (job.Keywords ?? "Empty") +
+                "\r\ncategories: " + string.Join(", ", job.JobListingCategories.Select(jc => jc.JobCategory.Name)) +
+                "\r\ntype: " + (job.Type ?? "Empty") +
+                "\r\nrequired skills: " + string.Join(", ", job.JobListingSkills) +
+                "\r\nnice to have: " + (/*job.NiceToHaves ?? ""*/"Empty") +
+                "\r\nresponsibilities: " + (job.Responsibilities ?? "Empty") +
+                "\r\ndescription: " + (job.Description ?? "Empty") +
+                "\r\nwho you are: " + (/*job.WhoYouAre ?? ""*/"Empty"),
+            };
+
+            var aiResponse = await JobAIModelService.PostJobAsync(aiRequest);
+
+            if (aiResponse != null)
+            {
+                job.WeightsJson = aiResponse.embedding.ToString();
+                await _context.SaveChangesAsync();
+            }
         }
 
         public async Task UpdateAsync(JobListing job, List<string> categories, List<string> skills, List<JobBenefit> benefits)
@@ -34,38 +61,77 @@ namespace CareerAdvisorAPIs.Repository.Classes
             await _context.SaveChangesAsync();
 
             await AddRelationsAsync(job, categories, skills, benefits);
+
+
+            // Send to AI job model
+
+            var aiRequest = new JobAIRequestDto
+            {
+                job_id = job.JobID,
+                description = "title: " + job.Title +
+                "\r\nkeywords: " + (job.Keywords ?? "Empty") +
+                "\r\ncategories: " + string.Join(", ", job.JobListingCategories.Select(jc => jc.JobCategory.Name)) +
+                "\r\ntype: " + (job.Type ?? "Empty") +
+                "\r\nrequired skills: " + string.Join(", ", job.JobListingSkills) +
+                "\r\nnice to have: " + (/*job.NiceToHaves ?? ""*/"Empty") +
+                "\r\nresponsibilities: " + (job.Responsibilities ?? "Empty") +
+                "\r\ndescription: " + (job.Description ?? "Empty") +
+                "\r\nwho you are: " + (/*job.WhoYouAre ?? ""*/"Empty"),
+            };
+
+            var aiResponse = await JobAIModelService.PostJobAsync(aiRequest);
+
+            if (aiResponse != null)
+            {
+                job.WeightsJson = JsonConvert.SerializeObject(aiResponse.embedding);
+                await _context.SaveChangesAsync();
+            }
         }
 
         private async Task AddRelationsAsync(JobListing job, List<string> categories, List<string> skills, List<JobBenefit> benefits)
         {
-            foreach (var name in categories.Distinct())
+            foreach (var name in categories.Distinct(StringComparer.OrdinalIgnoreCase))
             {
-                var cat = await _context.JobCategories.FirstOrDefaultAsync(c => c.Name == name)
-                          ?? new JobCategory { Name = name };
-                if (cat.CategoryID == 0)
+                try
                 {
-                    _context.JobCategories.Add(cat);
-                    await _context.SaveChangesAsync();
+                    var cat = await _context.JobCategories.FirstOrDefaultAsync(c => c.Name.ToLower() == name.ToLower())
+                              ?? new JobCategory { Name = name };
+                    if (cat.CategoryID == 0)
+                    {
+                        await _context.JobCategories.AddAsync(cat);
+                        await _context.SaveChangesAsync();
+                    }
+
+                    await _context.JobListingCategories.AddAsync(new JobListingCategory { JobID = job.JobID, CategoryID = cat.CategoryID });
                 }
-                _context.JobListingCategories.Add(new JobListingCategory { JobID = job.JobID, CategoryID = cat.CategoryID });
+                catch { }
             }
 
-            foreach (var name in skills.Distinct())
+            foreach (var name in skills.Distinct(StringComparer.OrdinalIgnoreCase))
             {
-                var skill = await _context.Skills.FirstOrDefaultAsync(s => s.Name == name)
-                            ?? new Skill { Name = name };
-                if (skill.SkillID == 0)
+                try
                 {
-                    _context.Skills.Add(skill);
-                    await _context.SaveChangesAsync();
+                    var skill = await _context.Skills.FirstOrDefaultAsync(s => s.Name.ToLower() == name.ToLower())
+                            ?? new Skill { Name = name };
+                    if (skill.SkillID == 0)
+                    {
+                        await _context.Skills.AddAsync(skill);
+                        await _context.SaveChangesAsync();
+                    }
+
+                    await _context.JobListingSkills.AddAsync(new JobListingSkill { JobID = job.JobID, SkillID = skill.SkillID });
                 }
-                _context.JobListingSkills.Add(new JobListingSkill { JobID = job.JobID, SkillID = skill.SkillID });
+                catch { }
             }
 
             foreach (var b in benefits)
             {
-                b.JobID = job.JobID;
-                _context.JobBenefits.Add(b);
+                try
+                {
+                    b.JobID = job.JobID;
+                    await _context.JobBenefits.AddAsync(b);
+                }
+                catch { }
             }
 
             await _context.SaveChangesAsync();
@@ -98,6 +164,49 @@ namespace CareerAdvisorAPIs.Repository.Classes
                     DateTime.UtcNow <= j.ApplyBefore && // Check if the job is still open for applications.
                     (j.Capacity == null || j.JobApplications.Count() < j.Capacity) // Ensure job capacity isn't full.
                 ).ToListAsync();
+        }
+
+        public async Task<IEnumerable<JobListing>> FilterAsync(FilterJobListingDto dto)
+        {
+            var query = _context.JobListings
+                .Include(j => j.User)
+                .Include(j => j.JobApplications).ThenInclude(ja => ja.User)
+                .Include(j => j.JobListingCategories).ThenInclude(jc => jc.JobCategory)
+                .Include(j => j.JobListingSkills).ThenInclude(js => js.Skill)
+                .Include(j => j.JobBenefits)
+                .AsQueryable();
+            if (dto.Categories != null && dto.Categories.Any())
+            {
+                query = query.Where(j =>
+                    j.JobListingCategories.Any(c => dto.Categories.Contains(c.JobCategory.Name)));
+            }
+            if (dto.Types != null && dto.Types.Any())
+            {
+                query = query.Where(j =>
+                    j.JobListingSkills.Any(s => dto.Types.Contains(s.JobListing.Type ?? "")));
+            }
+            if (dto.SalaryFrom != null)
+            {
+                query = query.Where(j => j.SalaryFrom >= dto.SalaryFrom);
+            }
+            if (dto.SalaryTo != null)
+            {
+                query = query.Where(j => j.SalaryTo <= dto.SalaryTo);
+            }
+
+            return await query.ToListAsync();
+        }
+        public async Task<IEnumerable<JobListing>> RecommendAsync(int userId)
+        {
+            var query = _context.JobListings
+                .Include(j => j.User)
+                .Include(j => j.JobApplications).ThenInclude(ja => ja.User)
+                .Include(j => j.JobListingCategories).ThenInclude(jc => jc.JobCategory)
+                .Include(j => j.JobListingSkills).ThenInclude(js => js.Skill)
+                .Include(j => j.JobBenefits)
+                .AsQueryable();
+
+            return await query.ToListAsync();
         }
 
         public async Task<JobListing?> GetDetailedByIdAsync(int id) =>

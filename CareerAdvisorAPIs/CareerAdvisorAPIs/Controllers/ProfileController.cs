@@ -89,7 +89,7 @@ namespace CareerAdvisorAPIs.Controllers
 
             // Update profile fields
             profile.JobTitle = editProfile.JobTitle;
-            profile.AboutMe = editProfile.AboutMe ;
+            profile.AboutMe = editProfile.AboutMe;
             profile.Phone = editProfile.Phone;
             profile.Gender = editProfile.Gender;
             profile.Type = editProfile.Type;
@@ -136,7 +136,7 @@ namespace CareerAdvisorAPIs.Controllers
 
             // Save changes
             await _unitOfWork.SaveAsync();
-            return Ok(new { Success = true, profile = new ProfileResponseDto(profile) });
+            return Ok(new ProfileResponseDto(profile));
         }
 
         [AllowAnonymous]

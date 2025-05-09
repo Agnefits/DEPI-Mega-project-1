@@ -23,10 +23,10 @@ namespace CareerAdvisorAPIs.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly EmailService _emailService;
-        private readonly JwtService _jwtService;
+        private readonly IEmailService _emailService;
+        private readonly IJwtService _jwtService;
 
-        public AuthController(IUnitOfWork unitOfWork, EmailService emailService, JwtService jwtService)
+        public AuthController(IUnitOfWork unitOfWork, IEmailService emailService, IJwtService jwtService)
         {
             _unitOfWork = unitOfWork;
             _emailService = emailService;
@@ -84,90 +84,90 @@ namespace CareerAdvisorAPIs.Controllers
 
             // Send verification email
             bool status = await _emailService.SendEmailAsync(
-     user.Email,
-     "Verify Your Email - JobGenius",
-     $@"
-    <html>
-    <head>
-        <style>
-            body {{
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                background-color: #f4f4f4;
-                padding: 20px;
-            }}
-            .container {{
-                background-color: #ffffff;
-                border-radius: 8px;
-                max-width: 600px;
-                margin: auto;
-                box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
-                overflow: hidden;
-            }}
-            .header {{
-                background-color: #007BFF;
-                color: white;
-                padding: 20px;
-                text-align: center;
-            }}
-            .header h1 {{
-                margin: 0;
-                font-size: 24px;
-            }}
-            .content {{
-                padding: 30px;
-                text-align: center;
-            }}
-            .content p {{
-                font-size: 16px;
-                color: #333;
-            }}
-            .verification-code {{
-                display: inline-block;
-                margin-top: 20px;
-                padding: 10px 20px;
-                font-size: 20px;
-                color: #007BFF;
-                background-color: #eaf3ff;
-                border-radius: 5px;
-                font-weight: bold;
-                letter-spacing: 2px;
-            }}
-            .footer {{
-                background-color: #f0f0f0;
-                padding: 20px;
-                text-align: center;
-                font-size: 13px;
-                color: #666;
-            }}
-        </style>
-    </head>
-    <body>
-        <div class='container'>
-            <div class='header'>
-                <h1>Welcome to JobGenius</h1>
-            </div>
-            <div class='content'>
-                <p>Hi {user.Fullname},</p>
-                <p>Thank you for joining <strong>JobGenius</strong>, your AI-powered career companion.</p>
-                <p>To activate your account, please use the verification code below:</p>
-                <div class='verification-code'>{verificationCode}</div>
-                <p>This code will expire in 1 hour. Please do not share it with anyone.</p>
-            </div>
-            <div class='footer'>
-                <p>&copy; {DateTime.Now.Year} JobGenius. All rights reserved.</p>
-                <p>Your future, guided by AI.</p>
-            </div>
-        </div>
-    </body>
-    </html>
-    ",
-     true
- );
+                 user.Email,
+                 "Verify Your Email - JobGenius",
+                 $@"
+                <html>
+                <head>
+                    <style>
+                        body {{
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                            background-color: #f4f4f4;
+                            padding: 20px;
+                        }}
+                        .container {{
+                            background-color: #ffffff;
+                            border-radius: 8px;
+                            max-width: 600px;
+                            margin: auto;
+                            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+                            overflow: hidden;
+                        }}
+                        .header {{
+                            background-color: #007BFF;
+                            color: white;
+                            padding: 20px;
+                            text-align: center;
+                        }}
+                        .header h1 {{
+                            margin: 0;
+                            font-size: 24px;
+                        }}
+                        .content {{
+                            padding: 30px;
+                            text-align: center;
+                        }}
+                        .content p {{
+                            font-size: 16px;
+                            color: #333;
+                        }}
+                        .verification-code {{
+                            display: inline-block;
+                            margin-top: 20px;
+                            padding: 10px 20px;
+                            font-size: 20px;
+                            color: #007BFF;
+                            background-color: #eaf3ff;
+                            border-radius: 5px;
+                            font-weight: bold;
+                            letter-spacing: 2px;
+                        }}
+                        .footer {{
+                            background-color: #f0f0f0;
+                            padding: 20px;
+                            text-align: center;
+                            font-size: 13px;
+                            color: #666;
+                        }}
+                    </style>
+                </head>
+                <body>
+                    <div class='container'>
+                        <div class='header'>
+                            <h1>Welcome to JobGenius</h1>
+                        </div>
+                        <div class='content'>
+                            <p>Hi {user.Fullname},</p>
+                            <p>Thank you for joining <strong>JobGenius</strong>, your AI-powered career companion.</p>
+                            <p>To activate your account, please use the verification code below:</p>
+                            <div class='verification-code'>{verificationCode}</div>
+                            <p>This code will expire in 1 hour. Please do not share it with anyone.</p>
+                        </div>
+                        <div class='footer'>
+                            <p>&copy; {DateTime.Now.Year} JobGenius. All rights reserved.</p>
+                            <p>Your future, guided by AI.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+                ",
+                 true
+             );
 
             if (!status)
                 return StatusCode(500, "Error: Message not sent");
             else
-                return Ok(new { Success = true, user.Verified, Message = "Account created successfully, verification code sent to email" });
+                return Ok(new AuthResponseDto { Success = true, Verified = user.Verified, Message = "Account created successfully, verification code sent to email" });
         }
 
         [HttpPost("login")]
@@ -226,7 +226,7 @@ namespace CareerAdvisorAPIs.Controllers
                 user.Verified = true;
                 await _unitOfWork.SaveAsync();
 
-                return Ok(new { Success = true, Message = "Email verified" });
+                return Ok(new AuthResponseDto { Success = true, Message = "Email verified" });
             }
         }
 
@@ -341,7 +341,7 @@ namespace CareerAdvisorAPIs.Controllers
             if (!status)
                 return StatusCode(500, "Error: Message not sent");
             else
-                return Ok(new { Success = true, Message = "Reset code sent to email" });
+                return Ok(new AuthResponseDto { Success = true, Message = "Reset code sent to email" });
         }
 
         [HttpPost("reset-password")]
@@ -385,7 +385,7 @@ namespace CareerAdvisorAPIs.Controllers
                 user.Verified = true;
                 await _unitOfWork.SaveAsync();
 
-                return Ok(new { Success = true, Message = "Password changed successfully" });
+                return Ok(new AuthResponseDto { Success = true, Message = "Password changed successfully" });
             }
         }
 
@@ -417,7 +417,7 @@ namespace CareerAdvisorAPIs.Controllers
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
             await _unitOfWork.SaveAsync();
 
-            return Ok(new { Success = true, Message = "Password changed successfully" });
+            return Ok(new AuthResponseDto { Success = true, Message = "Password changed successfully" });
         }
 
     }

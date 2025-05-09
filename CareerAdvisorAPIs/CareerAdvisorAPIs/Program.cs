@@ -17,6 +17,18 @@ class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
+        // Program.cs or Startup.cs
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("AllowAll", builder =>
+            {
+                builder
+                    .AllowAnyOrigin()   // Or specify your domain
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+            });
+        });
+
         builder.Services.AddControllers().AddJsonOptions(options =>
         {
             options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
@@ -53,8 +65,8 @@ class Program
         builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-        builder.Services.AddScoped<JwtService>();
-        builder.Services.AddScoped<EmailService>();
+        builder.Services.AddScoped<IJwtService, JwtService>();
+        builder.Services.AddScoped<IEmailService, EmailService>();
 
         // Add DbContext
         builder.Services.AddDbContext<CareerAdvisorCtx>(options =>
@@ -100,6 +112,9 @@ class Program
             var context = services.GetRequiredService<CareerAdvisorCtx>();
             context.Database.Migrate();
         }
+
+        //Apply CORS policy
+        app.UseCors("AllowAll");
 
         // Configure the HTTP request pipeline.
         //if (app.Environment.IsDevelopment()) // Note: Uncomment this line to enable Swagger in development mode only

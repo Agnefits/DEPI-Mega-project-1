@@ -16,12 +16,10 @@ namespace CareerAdvisorAPIs.Controllers
     public class PortfolioController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IWebHostEnvironment _env;
 
-        public PortfolioController(IUnitOfWork unitOfWork, IWebHostEnvironment env)
+        public PortfolioController(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
-            _env = env;
         }
 
         // Helper method to get user + profile

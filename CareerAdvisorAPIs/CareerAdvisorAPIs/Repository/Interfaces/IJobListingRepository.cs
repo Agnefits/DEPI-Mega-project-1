@@ -13,6 +13,8 @@ namespace CareerAdvisorAPIs.Repository.Interfaces
         Task UpdateAsync(JobListing job, List<string> categories, List<string> skills, List<JobBenefit> benefits);
 
         Task<IEnumerable<JobListing>> SearchAsync(string keyword, string? country, string? city);
+        Task<IEnumerable<JobListing>> FilterAsync(FilterJobListingDto dto);
+        Task<IEnumerable<JobListing>> RecommendAsync(int userId);
         Task<IEnumerable<CategoryJobCountDto>> GetCategoryJobCountsAsync();
     }
 
