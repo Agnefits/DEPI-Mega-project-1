@@ -18,8 +18,6 @@ This repository contains the AI‑only microservice for real‑time, content‑b
 ## 📦 Prerequisites
 
 * Python 3.10+
-* Docker (optional)
-* Kubernetes CLI (for K8s deployment)
 * (Optional) CUDA GPU for accelerated embeddings
 
 ---
@@ -73,48 +71,13 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 ---
 
-## 🐳 Docker
-
-```bash
-# Build image
-docker build -t job-recommender-ai:latest .
-# Run container
-docker run -e MODEL_NAME=all-MiniLM-L6-v2 -p 8000:8000 job-recommender-ai:latest
-```
-
----
-
-## ☸️ Kubernetes
-
-Apply the manifests in `k8s/` (or your own Helm chart):
-
-```bash
-kubectl apply -f k8s/deployment.yaml
-kubectl apply -f k8s/service.yaml
-kubectl apply -f k8s/hpa.yaml
-```
-
----
-
 ## 📚 Documentation
 
 All additional docs are in the `docs/` folder:
 
-* **`deployment_guide.md`**: Docker/K8s & CI/CD
 * **`embedding_strategy.md`**: Model choices & preprocessing
 * **`model_overview.md`**: Encoder architecture & specs
 * **`recommendation_pipeline.md`**: Data flow & pseudocode
-* **`testing_guide.md`**: Manual & automated tests
-
----
-
-## 🧪 Testing
-
-```bash
-pytest --cov=app
-```
-
-For manual tests, use Swagger UI or `curl` commands as described in `docs/testing_guide.md`.
 
 ---
 
