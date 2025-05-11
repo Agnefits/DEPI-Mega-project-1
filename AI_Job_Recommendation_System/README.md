@@ -36,7 +36,6 @@ AI_Job_Recommendation_System/
 │   ├── modeling/            # Model development
 │   └── visualizations/      # Data visualization
 ├── scripts/                  # Utility scripts
-├── tests/                    # Test files
 ├── CONTRIBUTING.md          # Contribution guidelines
 ├── CODE_OF_CONDUCT.md       # Code of conduct
 ├── LICENSE                  # Project license
