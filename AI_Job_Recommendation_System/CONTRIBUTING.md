@@ -111,4 +111,4 @@ job_recommendation_system/
 
 Open an issue or reach out to the maintainers via GitHub discussions or contact email:
 
-📧 [osama74454@gmail.com](osama74454@gmail.com "email")
+📧 [yelshrif33@gmail.com]
