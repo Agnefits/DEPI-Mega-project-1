@@ -52,7 +52,7 @@ namespace CareerAdvisorAPIs.Controllers
                 skills = profile.UserSkills.Select(us => us.Skill.Name).ToList()
             };
 
-            var aiModelResponse = await JobAIModelService.PostUserAsync(aiRequest);
+            var aiModelResponse = await _jobAIModelService.PostUserAsync(aiRequest);
             if (aiModelResponse != null)
                 profile.WeightsJson = JsonConvert.SerializeObject(aiModelResponse.embedding);
 
@@ -91,7 +91,7 @@ namespace CareerAdvisorAPIs.Controllers
                 skills = profile.UserSkills.Select(us => us.Skill.Name).ToList()
             };
 
-            var aiModelResponse = await JobAIModelService.PostUserAsync(aiRequest);
+            var aiModelResponse = await _jobAIModelService.PostUserAsync(aiRequest);
             if (aiModelResponse != null)
                 profile.WeightsJson = JsonConvert.SerializeObject(aiModelResponse.embedding);
 

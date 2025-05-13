@@ -16,10 +16,12 @@ namespace CareerAdvisorAPIs.Controllers
     public partial class ProfileController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IJobAIModelService _jobAIModelService;
 
-        public ProfileController(IUnitOfWork unitOfWork)
+        public ProfileController(IUnitOfWork unitOfWork, IJobAIModelService jobAIModelService)
         {
             _unitOfWork = unitOfWork;
+            _jobAIModelService = jobAIModelService;
         }
 
         // Helper method to get user + profile

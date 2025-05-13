@@ -7,12 +7,16 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using System.Linq;
 
 namespace CareerAdvisorAPIs.Repository.Classes
 {
     public class JobListingRepository : Repository<JobListing>, IJobListingRepository
     {
-        public JobListingRepository(CareerAdvisorCtx context) : base(context) { }
+        private readonly IJobAIModelService _jobAIModelService;
+        public JobListingRepository(CareerAdvisorCtx context, IJobAIModelService jobAIModelService) : base(context) {
+            _jobAIModelService = jobAIModelService;
+        }
         public async Task AddAsync(JobListing job, List<string> categories, List<string> skills, List<JobBenefit> benefits)
         {
             await _context.JobListings.AddAsync(job);
@@ -36,7 +40,7 @@ namespace CareerAdvisorAPIs.Repository.Classes
                 "\r\nwho you are: " + (/*job.WhoYouAre ?? ""*/"Empty"),
             };
 
-            var aiResponse = await JobAIModelService.PostJobAsync(aiRequest);
+            var aiResponse = await _jobAIModelService.PostJobAsync(aiRequest);
 
             if (aiResponse != null)
             {
@@ -79,7 +83,7 @@ namespace CareerAdvisorAPIs.Repository.Classes
                 "\r\nwho you are: " + (/*job.WhoYouAre ?? ""*/"Empty"),
             };
 
-            var aiResponse = await JobAIModelService.PostJobAsync(aiRequest);
+            var aiResponse = await _jobAIModelService.PostJobAsync(aiRequest);
 
             if (aiResponse != null)
             {
@@ -198,15 +202,68 @@ namespace CareerAdvisorAPIs.Repository.Classes
         }
         public async Task<IEnumerable<JobListing>> RecommendAsync(int userId)
         {
-            var query = _context.JobListings
-                .Include(j => j.User)
-                .Include(j => j.JobApplications).ThenInclude(ja => ja.User)
-                .Include(j => j.JobListingCategories).ThenInclude(jc => jc.JobCategory)
-                .Include(j => j.JobListingSkills).ThenInclude(js => js.Skill)
-                .Include(j => j.JobBenefits)
-                .AsQueryable();
+            var profile = await _context.Profiles.FirstAsync(p => p.UserID == userId);
 
-            return await query.ToListAsync();
+            if (profile.WeightsJson == null)
+            {
+                // Send skills to AI Model
+                var userAiRequest = new UserAIRequestDto
+                {
+                    user_id = profile.UserID,
+                    skills = profile.UserSkills.Select(us => us.Skill.Name).ToList()
+                };
+
+                var aiModelResponse = await _jobAIModelService.PostUserAsync(userAiRequest);
+                if (aiModelResponse != null)
+                    profile.WeightsJson = JsonConvert.SerializeObject(aiModelResponse.embedding);
+
+                await _context.SaveChangesAsync();
+            }
+
+            var jobs = await _context.JobListings
+                .Include(j => j.JobApplications).ThenInclude(ja => ja.User)
+                .Where(j => DateTime.UtcNow <= j.ApplyBefore &&
+                        (j.Capacity == null || j.JobApplications.Count() < j.Capacity) && j.WeightsJson != null)
+                .Select(j => new JobListing
+                {
+                    JobID = j.JobID,
+                    WeightsJson = j.WeightsJson
+                })
+                .ToListAsync();
+
+
+            var aiRequest = new RecommenderAIRequestDto
+            {
+                user_id = userId,
+                user_embedding = JsonConvert.DeserializeObject<IEnumerable<double>>(profile.WeightsJson),
+                job_ids = jobs.Select(j => j.JobID).ToList(),
+                job_embeddings = jobs.Select(j => JsonConvert.DeserializeObject<IEnumerable<double>>(j.WeightsJson)).ToList(),
+                top_k = 100,
+            };
+
+            var aiResponse = await _jobAIModelService.PostRecommenderAsync(aiRequest);
+            if (aiResponse != null)
+            {
+                var recommendedJobs = new List<JobListing>();
+                foreach (var recommend in aiResponse.recommendations)
+                {
+                    var job = await _context.JobListings
+                        .Include(j => j.User)
+                        .Include(j => j.JobApplications).ThenInclude(ja => ja.User)
+                        .Include(j => j.JobListingCategories).ThenInclude(jc => jc.JobCategory)
+                        .Include(j => j.JobListingSkills).ThenInclude(js => js.Skill)
+                        .Include(j => j.JobBenefits)
+                        .FirstAsync(j => j.JobID == recommend.job_id);
+
+                    if (job != null)
+                    {
+                        recommendedJobs.Add(job);
+                    }
+                }
+                return recommendedJobs;
+            }
+
+            return [];
         }
 
         public async Task<JobListing?> GetDetailedByIdAsync(int id) =>

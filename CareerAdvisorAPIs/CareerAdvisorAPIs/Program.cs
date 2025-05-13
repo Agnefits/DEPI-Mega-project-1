@@ -62,6 +62,8 @@ class Program
         builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 
         // Register repositories
+        builder.Services.AddScoped<IJobAIModelService, JobAIModelService>();
+
         builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
