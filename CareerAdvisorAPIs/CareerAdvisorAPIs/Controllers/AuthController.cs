@@ -376,6 +376,10 @@ namespace CareerAdvisorAPIs.Controllers
             }
             else
             {
+                // Verify that the new password is not the same old one
+                if (BCrypt.Net.BCrypt.Verify(resetPasswordDto.NewPassword, user.PasswordHash))
+                    return BadRequest("New password must be different from the current password.");
+
                 // Delete the token after successful verification
                 _unitOfWork.Tokens.Delete(token);
 

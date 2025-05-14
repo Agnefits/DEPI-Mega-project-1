@@ -3,18 +3,17 @@ using CareerAdvisorAPIs.DTOs.JobListing;
 using CareerAdvisorAPIs.Models;
 using CareerAdvisorAPIs.Repository.Interfaces;
 using CareerAdvisorAPIs.Services;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
-using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace CareerAdvisorAPIs.Repository.Classes
 {
     public class JobListingRepository : Repository<JobListing>, IJobListingRepository
     {
         private readonly IJobAIModelService _jobAIModelService;
-        public JobListingRepository(CareerAdvisorCtx context, IJobAIModelService jobAIModelService) : base(context) {
+        public JobListingRepository(CareerAdvisorCtx context, IJobAIModelService jobAIModelService) : base(context)
+        {
             _jobAIModelService = jobAIModelService;
         }
         public async Task AddAsync(JobListing job, List<string> categories, List<string> skills, List<JobBenefit> benefits)
@@ -143,32 +142,53 @@ namespace CareerAdvisorAPIs.Repository.Classes
 
         public async Task<IEnumerable<JobListing>> SearchAsync(string keyword, string? country, string? city)
         {
-            keyword = keyword.ToLower();
-            country = (country ?? "").ToLower();
-            city = (city ?? "").ToLower();
+            string Normalize(string input)
+            {
+                if (string.IsNullOrWhiteSpace(input)) return "";
+                var normalized = Regex.Replace(input.ToLower(), @"[^a-z0-9]", " ");
+                return Regex.Replace(normalized, @"\s+", " ").Trim();
+            }
 
-            return await _context.JobListings
+            var normalizedKeyword = Normalize(keyword ?? "");
+            var keywordParts = normalizedKeyword.Split(" ", StringSplitOptions.RemoveEmptyEntries);
+            var normalizedCity = Normalize(city ?? "");
+            var normalizedCountry = Normalize(country ?? "");
+
+            // Step 1: Filter listings in DB
+            var jobListings = await _context.JobListings
                 .Include(j => j.User)
                 .Include(j => j.JobApplications).ThenInclude(ja => ja.User)
                 .Include(j => j.JobListingCategories).ThenInclude(jc => jc.JobCategory)
                 .Include(j => j.JobListingSkills).ThenInclude(js => js.Skill)
                 .Include(j => j.JobBenefits)
+                .Where(j => DateTime.UtcNow <= j.ApplyBefore &&
+                            (j.Capacity == null || j.JobApplications.Count < j.Capacity))
+                .ToListAsync();
+
+            // Step 2: Apply filtering + scoring
+            var filteredAndRanked = jobListings
                 .Where(j =>
-                    EF.Functions.Like(j.Title.ToLower(), $"%{keyword}%") ||
-                    EF.Functions.Like(j.Company.ToLower() ?? "", $"%{keyword}%") ||
-                    (EF.Functions.Like(j.City.ToLower() ?? "", $"%{city}%") && !city.IsNullOrEmpty()) ||
-                    (EF.Functions.Like(j.Country.ToLower() ?? "", $"%{country}%") && !country.IsNullOrEmpty()) ||
-                    EF.Functions.Like(j.Type.ToLower() ?? "", $"%{keyword}%") ||
-                    EF.Functions.Like(j.Description.ToLower() ?? "", $"%{keyword}%") ||
-                    j.JobListingSkills.Any(s => s.Skill.Name.ToLower().Contains(keyword)) ||
-                    j.JobListingCategories.Any(c => c.JobCategory.Name.ToLower().Contains(keyword))
-                )
-                // Apply additional checks for date and capacity.
-                .Where(j =>
-                    DateTime.UtcNow <= j.ApplyBefore && // Check if the job is still open for applications.
-                    (j.Capacity == null || j.JobApplications.Count() < j.Capacity) // Ensure job capacity isn't full.
-                ).ToListAsync();
+                    (string.IsNullOrEmpty(normalizedCity) || Normalize(j.City ?? "").Contains(normalizedCity)) &&
+                    (string.IsNullOrEmpty(normalizedCountry) || Normalize(j.Country ?? "").Contains(normalizedCountry)))
+                .Select(j => new
+                {
+                    Job = j,
+                    Score = keywordParts.Sum(k =>
+                        (Normalize(j.Title).Contains(k) ? 5 : 0) +
+                        (Normalize(j.Company ?? "").Contains(k) ? 4 : 0) +
+                        (Normalize(j.Type ?? "").Contains(k) ? 2 : 0) +
+                        (Normalize(j.Description ?? "").Contains(k) ? 1 : 0) +
+                        (j.JobListingSkills.Any(s => Normalize(s.Skill.Name).Contains(k)) ? 2 : 0) +
+                        (j.JobListingCategories.Any(c => Normalize(c.JobCategory.Name).Contains(k)) ? 2 : 0)
+                    )
+                })
+                .Where(x => x.Score > 0)
+                .OrderByDescending(x => x.Score)
+                .Select(x => x.Job);
+
+            return filteredAndRanked;
         }
+
 
         public async Task<IEnumerable<JobListing>> FilterAsync(FilterJobListingDto dto)
         {
