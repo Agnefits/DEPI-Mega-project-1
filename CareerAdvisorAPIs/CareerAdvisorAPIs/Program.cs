@@ -11,6 +11,7 @@ using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using CareerAdvisorAPIs.Hubs;
+using Microsoft.AspNetCore.Authentication.Cookies;
 class Program
 {
     static void Main(string[] args)
@@ -84,6 +85,22 @@ class Program
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+        }).AddCookie().AddGoogle(options =>
+        {
+            options.ClientId = builder.Configuration["Signup:GoogleClientID"];
+            options.ClientSecret = builder.Configuration["Signup:GoogleClientSecret"];
+            options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme; 
+
+        }).AddFacebook(options =>
+        {
+            options.AppId = builder.Configuration["Signup:FacebookAppID"];
+            options.AppSecret = builder.Configuration["Signup:FacebookAppSecret"];
+            options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        }).AddMicrosoftAccount(options =>
+        {
+            options.ClientId = builder.Configuration["Signup:MicrosoftClientID"];
+            options.ClientSecret = builder.Configuration["Signup:MicrosoftClientSecret"];
+            options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
         })
         .AddJwtBearer(options =>
         {

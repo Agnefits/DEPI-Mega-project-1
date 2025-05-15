@@ -14,6 +14,10 @@ using CareerAdvisorAPIs.Helpers;
 using CareerAdvisorAPIs.Repository.Interfaces;
 using CareerAdvisorAPIs.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authentication.Facebook;
+using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
 
 namespace CareerAdvisorAPIs.Controllers
 {
@@ -422,6 +426,159 @@ namespace CareerAdvisorAPIs.Controllers
             await _unitOfWork.SaveAsync();
 
             return Ok(new AuthResponseDto { Success = true, Message = "Password changed successfully" });
+        }
+        [HttpGet("signup-google")]
+        public IActionResult GoogleSignup()
+        {
+            var redirectUrl = Url.Action("GoogleResponse", "Auth");
+            var properties = new AuthenticationProperties { RedirectUri = redirectUrl };
+            return Challenge(properties, GoogleDefaults.AuthenticationScheme);
+        }
+
+        [HttpGet("signup-facebook")]
+        public IActionResult FacebookSignup()
+        {
+            var redirectUrl = Url.Action("FacebookResponse", "Auth");
+            var properties = new AuthenticationProperties { RedirectUri = redirectUrl };
+            return Challenge(properties, FacebookDefaults.AuthenticationScheme);
+        }
+
+        [HttpGet("signup-microsoft")]
+        public IActionResult MicrosoftSignup()
+        {
+            var redirectUrl = Url.Action("MicrosoftResponse", "Auth");
+            var properties = new AuthenticationProperties { RedirectUri = redirectUrl };
+            return Challenge(properties, MicrosoftAccountDefaults.AuthenticationScheme);
+        }
+
+        [HttpGet("google-response")]
+        public async Task<IActionResult> GoogleResponse()
+        {
+            try
+            {
+                var result = await HttpContext.AuthenticateAsync(GoogleDefaults.AuthenticationScheme);
+                if (!result.Succeeded)
+                    return BadRequest("Google authentication failed.");
+
+                var email = result.Principal.FindFirstValue(ClaimTypes.Email);
+                var user = await _unitOfWork.Users.GetByEmailAsync(email);
+
+                if (user == null)
+                {
+                    user = new User
+                    {
+                        Fullname = result.Principal.FindFirstValue(ClaimTypes.Name),
+                        Email = email,
+                        Provider = "Google",
+                        Verified = true,
+                        CreationDate = DateTime.UtcNow
+                    };
+                    await _unitOfWork.Users.AddAsync(user);
+                }
+                else
+                {
+                    user.Fullname = result.Principal.FindFirstValue(ClaimTypes.Name);
+                    user.Provider = "Google";
+                    user.Verified = true;
+                    user.CreationDate = DateTime.UtcNow;
+                    _unitOfWork.Users.Update(user);
+                }
+
+                await _unitOfWork.SaveAsync();
+
+                // Generate JWT or handle session
+                return Ok(_jwtService.Authenticate(user));
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
+        }
+
+        [HttpGet("facebook-response")]
+        public async Task<IActionResult> FacebookResponse()
+        {
+            try
+            {
+                var result = await HttpContext.AuthenticateAsync(FacebookDefaults.AuthenticationScheme);
+                if (!result.Succeeded)
+                    return BadRequest("Facebook authentication failed.");
+
+                var email = result.Principal.FindFirstValue(ClaimTypes.Email);
+                var user = await _unitOfWork.Users.GetByEmailAsync(email);
+
+                if (user == null)
+                {
+                    user = new User
+                    {
+                        Fullname = result.Principal.FindFirstValue(ClaimTypes.Name),
+                        Email = email,
+                        Provider = "Facebook",
+                        Verified = true,
+                        CreationDate = DateTime.UtcNow
+                    };
+                    await _unitOfWork.Users.AddAsync(user);
+                }
+                else
+                {
+                    user.Fullname = result.Principal.FindFirstValue(ClaimTypes.Name);
+                    user.Provider = "Facebook";
+                    user.Verified = true;
+                    user.CreationDate = DateTime.UtcNow;
+                    _unitOfWork.Users.Update(user);
+                }
+                await _unitOfWork.SaveAsync();
+
+                // Generate JWT or handle session
+                return Ok(_jwtService.Authenticate(user));
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
+        }
+        [HttpGet("microsoft-response")]
+        public async Task<IActionResult> MicrosoftResponse()
+        {
+            try
+            {
+                var result = await HttpContext.AuthenticateAsync(MicrosoftAccountDefaults.AuthenticationScheme);
+                if (!result.Succeeded)
+                    return BadRequest("Microsoft authentication failed.");
+
+                var email = result.Principal.FindFirstValue(ClaimTypes.Email);
+                var user = await _unitOfWork.Users.GetByEmailAsync(email);
+
+                if (user == null)
+                {
+                    user = new User
+                    {
+                        Fullname = result.Principal.FindFirstValue(ClaimTypes.Name),
+                        Email = email,
+                        Provider = "Microsoft",
+                        Verified = true,
+                        CreationDate = DateTime.UtcNow
+                    };
+                    await _unitOfWork.Users.AddAsync(user);
+                    await _unitOfWork.SaveAsync();
+                }
+                else
+                {
+                    user.Fullname = result.Principal.FindFirstValue(ClaimTypes.Name);
+                    user.Provider = "Microsoft";
+                    user.Verified = true;
+                    user.CreationDate = DateTime.UtcNow;
+                    _unitOfWork.Users.Update(user);
+                }
+                await _unitOfWork.SaveAsync();
+
+                // Generate JWT or handle session
+                return Ok(_jwtService.Authenticate(user));
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
         }
 
     }

@@ -1,4 +1,5 @@
 ﻿using CareerAdvisorAPIs.DTOs.Auth;
+using CareerAdvisorAPIs.Models;
 using CareerAdvisorAPIs.Repository.Interfaces;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -34,41 +35,46 @@ namespace CareerAdvisorAPIs.Services
                 return new LoginResponseDto { IsAuthenticated = false, Message = "Password is incorrect" };
             else
             {
-                var issuer = _configuration["JwtConfig:Issuer"];
-                var audience = _configuration["JwtConfig:Audience"];
-                var secret = _configuration["JwtConfig:Secret"];
-                var tokenValidityMins = _configuration.GetValue<int>("JwtConfig:TokenValidityMins");
-                var tokenExpiryTimeStamp = DateTime.UtcNow.AddMinutes(tokenValidityMins);
+                return Authenticate(user);
+            }
+        }
+        public LoginResponseDto Authenticate(User user)
+        {
 
-                // Generate JWT token
-                var tokenDescriptor = new SecurityTokenDescriptor
+            var issuer = _configuration["JwtConfig:Issuer"];
+            var audience = _configuration["JwtConfig:Audience"];
+            var secret = _configuration["JwtConfig:Secret"];
+            var tokenValidityMins = _configuration.GetValue<int>("JwtConfig:TokenValidityMins");
+            var tokenExpiryTimeStamp = DateTime.UtcNow.AddMinutes(tokenValidityMins);
+
+            // Generate JWT token
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
                 {
-                    Subject = new ClaimsIdentity(new[]
-                    {
                         new Claim(ClaimTypes.NameIdentifier, user.UserID.ToString()),
                         new Claim(ClaimTypes.Email, user.Email),
                         new Claim(ClaimTypes.Name, user.Fullname),
                     }),
-                    Expires = tokenExpiryTimeStamp,
-                    Issuer = issuer,
-                    Audience = audience,
-                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)), SecurityAlgorithms.HmacSha256)
-                };
+                Expires = tokenExpiryTimeStamp,
+                Issuer = issuer,
+                Audience = audience,
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)), SecurityAlgorithms.HmacSha256)
+            };
 
-                var tokenHandler = new JwtSecurityTokenHandler();
-                var securityToken = tokenHandler.CreateToken(tokenDescriptor);
-                var accessToken = tokenHandler.WriteToken(securityToken);
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var securityToken = tokenHandler.CreateToken(tokenDescriptor);
+            var accessToken = tokenHandler.WriteToken(securityToken);
 
-                return new LoginResponseDto
-                {
-                    IsAuthenticated = true,
-                    Email = user.Email,
-                    Fullname = user.Fullname,
-                    Token = accessToken,
-                    ExpiresIn = (int)(tokenExpiryTimeStamp - DateTime.UtcNow).TotalSeconds,
-                    Message = "Login successful"
-                };
-            }
+            return new LoginResponseDto
+            {
+                IsAuthenticated = true,
+                Email = user.Email,
+                Fullname = user.Fullname,
+                Token = accessToken,
+                ExpiresIn = (int)(tokenExpiryTimeStamp - DateTime.UtcNow).TotalSeconds,
+                Message = "Login successful"
+            };
         }
     }
 }
