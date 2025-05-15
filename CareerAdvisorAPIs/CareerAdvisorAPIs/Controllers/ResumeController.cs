@@ -7,6 +7,8 @@ using CareerAdvisorAPIs.Repository.Interfaces;
 using CareerAdvisorAPIs.DTOs.Resume;
 using CareerAdvisorAPIs.Services;
 using Microsoft.AspNetCore.StaticFiles;
+using CareerAdvisorAPIs.DTOs.JobListing;
+using Newtonsoft.Json;
 
 namespace CareerAdvisorAPIs.Controllers
 {
@@ -16,10 +18,12 @@ namespace CareerAdvisorAPIs.Controllers
     public class ResumeController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IResumeAIModelService _resumeAIModelService;
 
-        public ResumeController(IUnitOfWork unitOfWork)
+        public ResumeController(IUnitOfWork unitOfWork, IResumeAIModelService resumeAIModelService)
         {
             _unitOfWork = unitOfWork;
+            _resumeAIModelService = resumeAIModelService;
         }
 
         private async Task<(User user, Profile profile, IActionResult errorResult)> GetAuthenticatedUserAndProfileAsync()
@@ -66,6 +70,7 @@ namespace CareerAdvisorAPIs.Controllers
             var (user, profile, error) = await GetAuthenticatedUserAndProfileAsync();
             if (error != null) return error;
 
+            // Step 1: Create basic resume entry
             var resume = new Resume
             {
                 UserID = user.UserID,
@@ -78,28 +83,24 @@ namespace CareerAdvisorAPIs.Controllers
             await _unitOfWork.Resumes.AddAsync(resume);
             await _unitOfWork.SaveAsync();
 
+            // Step 2: Save file to disk
             var filePath = await FileService.SaveFile($"Resume/{resume.ResumeID}/files", dto.File);
-            resume.File = filePath; // Save the file path in the database
+            resume.File = filePath;
 
+            // Step 3: Call FastAPI scoring endpoint
+            ResumeAIResponseDto? aiFeedback = await _resumeAIModelService.PostResumeAsync(new ResumeAIRequestDto { filePath = filePath, jobDescription = dto.JobDescription });
 
-            var aiFeedback = new
+            if (aiFeedback == null)
             {
-                Text = "Good structure, but lacks keyword alignment with job description.",
-                Score = 0.78m,
-                Weights = new Dictionary<string, decimal>
-                {
-                    { "structure", 0.85m },
-                    { "keywords", 0.6m },
-                    { "grammar", 0.95m },
-                    { "layout", 0.8m }
-                }
-            };
+                return StatusCode(500, "Failed to generate AI feedback.");
+            }
 
+            // Step 4: Save feedback to DB
             var feedback = new ResumeFeedback
             {
-                FeedbackText = aiFeedback.Text,
+                FeedbackText = aiFeedback.Feedback,
                 Score = aiFeedback.Score,
-                WeightsJson = JsonSerializer.Serialize(aiFeedback.Weights)
+                WeightsJson = "{}"
             };
 
             await _unitOfWork.ResumeFeedbacks.AddAsync(feedback);
@@ -107,6 +108,7 @@ namespace CareerAdvisorAPIs.Controllers
 
             await _unitOfWork.SaveAsync();
 
+            // Step 5: Return response
             return Ok(new ResumeResponseDto
             {
                 ResumeID = resume.ResumeID,
@@ -118,6 +120,7 @@ namespace CareerAdvisorAPIs.Controllers
                 Score = feedback.Score
             });
         }
+
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)

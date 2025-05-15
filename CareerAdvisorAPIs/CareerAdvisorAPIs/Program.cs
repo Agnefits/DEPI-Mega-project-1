@@ -64,6 +64,7 @@ class Program
 
         // Register repositories
         builder.Services.AddScoped<IJobAIModelService, JobAIModelService>();
+        builder.Services.AddScoped<IResumeAIModelService, ResumeAIModelService>();
 
         builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
