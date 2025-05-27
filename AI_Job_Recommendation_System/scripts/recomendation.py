@@ -6,7 +6,6 @@ if project_root not in sys.path:
     sys.path.append(project_root)
 
 from scripts.data_cleaning import load_and_prepare_jobs, load_normalized_user_skills, clean_text
-from app.services.embedding_utils import generate_job_embeddings
 import pandas as pd
 import numpy as np
 from pydantic import BaseModel
@@ -16,7 +15,6 @@ from sklearn.metrics.pairwise import cosine_similarity
 import threading
 import torch
 import ast
-from sklearn.preprocessing import normalize
 
 class Job(BaseModel):
     job_id: int
@@ -49,17 +47,53 @@ class JobCache:
                 self.embeddings = np.load(self.embeddings_path)
                 print("embeddings loaded")
             else:
+                pass
                 # Generate embeddings if file doesn't exist
-                self.embeddings = generate_job_embeddings(self.model, self.job_df["text"].tolist())
+                self.embeddings = self.model.encode(
+                    self.job_df["text"].tolist(),
+                    convert_to_numpy=True,
+                    show_progress_bar=False,
+                    device='cuda'
+                )
+                faiss.normalize_L2(self.embeddings)
                 # Save embeddings if path is provided
                 if self.embeddings_path:
                     np.save(self.embeddings_path, self.embeddings)
 
+    def add_new_job(self, job_data: dict):
+        """Add a new job and its embedding to the cache"""
+        with self.lock:
+            # Create new job entry
+            new_job = pd.DataFrame([job_data])
+            new_job["title_clean"] = new_job["Job_title"].apply(clean_text)
+            new_job["desc_clean"] = new_job["Description"].apply(clean_text)
+            new_job["text"] = new_job["title_clean"] + " " + new_job["desc_clean"]
+            
+            # Generate embedding for new job
+            new_embedding = self.model.encode(
+                new_job["text"].tolist(),
+                convert_to_numpy=True,
+                show_progress_bar=False,
+                device='cuda'
+            )
+            
+            # Append to existing data
+            self.job_df = pd.concat([self.job_df, new_job], ignore_index=True)
+            self.embeddings = np.vstack([self.embeddings, new_embedding])
+            
+            # Save updated embeddings if path is provided
+            if self.embeddings_path:
+                np.save(self.embeddings_path, self.embeddings)
 
-    def query(self, user_emb: np.ndarray):
+    def query(self, user_emb: np.ndarray, user_loc: str):
+        # Filter by location if provided
+        if user_loc:
+            mask = (self.job_df["Location"] == user_loc)
+        else:
+            mask = np.ones(len(self.job_df), dtype=bool)
 
-        df_f = self.job_df.reset_index(drop=True)
-        emb_f = self.embeddings
+        df_f = self.job_df[mask].reset_index(drop=True)
+        emb_f = self.embeddings[mask]
 
         # Compute cosine similarities
         sims = cosine_similarity([user_emb], emb_f)[0]

@@ -5,6 +5,7 @@ numpy==1.26.4
 pandas==1.5.3
 scikit-learn==1.4.1.post1
 sentence-transformers==2.5.1
+re==2.2.1
 
 # === Core API Framework ===
 fastapi==0.110.0
@@ -15,11 +16,6 @@ pydantic==2.6.3
 sentence-transformers==2.5.1        # SBERT for semantic embeddings
 scikit-learn==1.4.1.post1           # For cosine similarity
 numpy==1.26.4                       # For numerical operations
-
-# === Visualization ===
-seaborn==0.12.2
-matplotlib==3.7.1
-
 
 # === Environment Handling ===
 python-dotenv==1.0.1

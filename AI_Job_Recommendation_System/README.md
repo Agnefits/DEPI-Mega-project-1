@@ -1,118 +1,129 @@
-# AI-Powered Job Recommendation System
+# Content‑Based Job Recommendation Service
 
-A sophisticated job recommendation system that uses AI to match job seekers with relevant job opportunities based on their skills and job descriptions.
+This repository contains the AI‑only microservice for real‑time, content‑based job recommendations. It embeds user skills and job descriptions using pre‑trained transformer models and ranks jobs by cosine similarity.
+
+---
 
 ## 🚀 Features
 
-- **AI-Powered Matching**: Utilizes Sentence-BERT for semantic understanding of job descriptions and user skills
-- **Real-time Recommendations**: Fast and efficient job matching using cosine similarity
-- **RESTful API**: Easy-to-use API endpoints for job and user processing
-- **Scalable Architecture**: Modular design for easy maintenance and scaling
-- **Data Analysis**: Comprehensive notebooks for data exploration and model development
-- **Documentation**: Detailed technical documentation and API references
+* **FastAPI** endpoints for ingestion and recommendation
+* **Sentence‑Transformers** embeddings (MiniLM, E5‑small)
+* **Explicit chunking** for long text descriptions
+* **Cosine similarity** ranking (top‑7 by default)
+* Stateless: persistence handled by upstream backend
+* Configurable via environment variables
 
-## 📁 Project Structure
+---
 
+## 📦 Prerequisites
+
+* Python 3.10+
+* Docker (optional)
+* Kubernetes CLI (for K8s deployment)
+* (Optional) CUDA GPU for accelerated embeddings
+
+---
+
+## ⚙️ Installation
+
+1. **Clone the repo**
+
+   ```bash
+   git clone https://github.com/yousufelshrif/Job_Recomendation_System
+   cd job-recommender-ai
+   ```
+
+2. **Create a virtual environment**
+
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate
+   ```
+
+3. **Install dependencies**
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+---
+
+## 📝 Configuration
+
+Set the following **environment variables** (or use a `.env` file):
+
+```dotenv
+MODEL_NAME=all-MiniLM-L6-v2
+DEVICE=cpu            # or 'cuda'
+TOP_K=7               # number of recommendations
+REDIS_URL=           # if using Redis cache
+LOG_LEVEL=info
 ```
-AI_Job_Recommendation_System/
-├── app/                        # Application code
-│   ├── main.py                # FastAPI application entry point
-│   └── services/
-│       ├── embedding_utils.py  # Text embedding utilities
-│       └── recommendation_engine.py  # Job recommendation logic
-├── data/                      # Data storage
-│   ├── raw/                   # Raw data files
-│   └── processed/             # Processed data files
-├── docs/                      # Project documentation
-│   ├── api_routes.md         # API endpoint documentation
-│   ├── architecture.md       # System architecture
-│   ├── deployment.md         # Deployment guide
-│   ├── development.md        # Development guide
-│   ├── embedding_strategy.md # Embedding model details
-│   ├── model_overview.md     # Model architecture
-│   ├── recommendation_pipeline.md # Recommendation process
-│   └── requirements.md       # System requirements
-├── notebooks/                 # Jupyter notebooks
-│   ├── data_exploration/     # Data analysis notebooks
-│   ├── feature_engineering/  # Feature development
-│   ├── modeling/            # Model development
-│   └── visualizations/      # Data visualization
-├── scripts/                  # Utility scripts
-├── CODE_OF_CONDUCT.md       # Code of conduct
-├── CONTRIBUTING.md          # Contribution guidelines
-├── LICENSE                  # Project license
-├── README.md               # Project overview
-├── requirements.txt        # Python dependencies
-└── run.py                 # Application runner
-```
 
-## 🛠️ Installation
+---
 
-1. Clone the repository:
+## ▶️ Running Locally
+
 ```bash
-git clone https://github.com/yousufelshrif/Job_Recomendation_System
-cd AI_Job_Recommendation_System
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-2. Create and activate a virtual environment:
+* API docs available at [http://localhost:8000/docs](http://localhost:8000/docs)
+* Health endpoint: `GET /health`
+
+---
+
+## 🐳 Docker
+
 ```bash
-# Windows
-python -m venv venv
-venv\Scripts\activate
-
-# Linux/Mac
-python3 -m venv venv
-source venv/bin/activate
+# Build image
+docker build -t job-recommender-ai:latest .
+# Run container
+docker run -e MODEL_NAME=all-MiniLM-L6-v2 -p 8000:8000 job-recommender-ai:latest
 ```
 
-3. Install dependencies:
+---
+
+## ☸️ Kubernetes
+
+Apply the manifests in `k8s/` (or your own Helm chart):
+
 ```bash
-pip install -r requirements.txt
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/service.yaml
+kubectl apply -f k8s/hpa.yaml
 ```
 
-## 🚀 Usage
-
-1. Start the API server:
-```bash
-python run.py
-# or
-uvicorn app.main:app --reload
-```
-
-2. The API will be available at `http://localhost:8000`
+---
 
 ## 📚 Documentation
 
-For detailed documentation, please refer to the [docs](docs/) directory:
+All additional docs are in the `docs/` folder:
 
-- [API Routes](docs/api_routes.md) - Detailed API endpoint documentation
-- [System Architecture](docs/architecture.md) - System design and components
-- [Embedding Strategy](docs/embedding_strategy.md) - Text embedding approach
-- [Model Overview](docs/model_overview.md) - ML model architecture
-- [Recommendation Pipeline](docs/recommendation_pipeline.md) - Recommendation process
-- [System Requirements](docs/requirements.md) - Technical requirements
+* **`deployment_guide.md`**: Docker/K8s & CI/CD
+* **`embedding_strategy.md`**: Model choices & preprocessing
+* **`model_overview.md`**: Encoder architecture & specs
+* **`recommendation_pipeline.md`**: Data flow & pseudocode
+* **`testing_guide.md`**: Manual & automated tests
 
-## 📊 Data Analysis
+---
 
-Explore the Jupyter notebooks in the `notebooks/` directory:
+## 🧪 Testing
 
-- `data_exploration/` - Data analysis and insights
-- `feature_engineering/` - Feature development process
-- `modeling/` - Model development and evaluation
-- `visualizations/` - Data visualization examples
+```bash
+pytest --cov=app
+```
+
+For manual tests, use Swagger UI or `curl` commands as described in `docs/testing_guide.md`.
+
+---
 
 ## 🤝 Contributing
 
-Please read our [Contributing Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md) before contributing to this project.
+Contributions are welcome! Please open issues or submit PRs for new features, bug fixes, or documentation improvements.
 
-## 📝 License
+---
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## 📄 License
 
-## 🔧 Development
-
-For development guidelines and best practices, please refer to the [Development Guide](docs/development.md).
-
-## 🚀 Deployment
-
-For deployment instructions and configuration, please refer to the [Deployment Guide](docs/deployment.md).
+This project is licensed under the MIT License. See `LICENSE` for details.
