@@ -35,7 +35,7 @@ AI_Job_Recommendation_System/
 ├── notebooks/                 # Jupyter notebooks
 │   ├── data_exploration/     # Data analysis notebooks
 │   ├── feature_engineering/  # Feature development
-│   ├── modeling/            # Model development
+│   ├── testing/            # test development
 │   └── visualizations/      # Data visualization
 ├── scripts/                  # Utility scripts
 ├── CODE_OF_CONDUCT.md       # Code of conduct
