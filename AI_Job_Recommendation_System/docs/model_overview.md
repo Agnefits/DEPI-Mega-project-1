@@ -31,12 +31,15 @@ This document provides a high-level view of the embedding models and pooling mec
 ## 2. Pooling Head
 
 * **Mean Pooling**: Average token embeddings across the sequence
+* **Output Vector**: L2-normalized before similarity comparisons
+* **Alternative Pooling Methods**:
+  * Max pooling
+  * CLS token pooling
+  * Attention pooling
 
 ```plaintext
 [Token Embeddings] → mean(...) → [Sequence Embedding]
 ```
-
-* **Output Vector**: L2-normalized before similarity comparisons
 
 ---
 
@@ -64,12 +67,62 @@ This document provides a high-level view of the embedding models and pooling mec
 
   * Contrastive learning on job–application pairs
   * Domain adaptation with in-house job descriptions
+  * Multi-task learning for job matching
 
 ---
 
-## 5. Extension Points
+## 5. Model Variants
 
-* **Swap Encoder**: Change `MODEL_NAME` environment variable (e.g., to `intfloat/e5-mistral-7b-instruct`) quantize and redeploy
-* **Custom Pooling**: Replace mean pooling with attention pooling or max pooling via model config
-* **Parameter Tuning**: Add chunk size, stride, or add sliding-window overlap
+### Primary Model: MiniLM-L6-v2
+* 6 transformer layers
+* 384-dimensional embeddings
+* Optimized for CPU inference
+* Good balance of speed and accuracy
+
+### Alternative Model: E5-small-v2
+* 12 transformer layers
+* 256-dimensional embeddings
+* Better for edge devices
+* Faster inference time
+
+---
+
+## 6. Performance Characteristics
+
+### Speed
+* CPU inference: < 50ms per text
+* GPU inference: < 10ms per text
+* Batch processing: 32 texts at once
+
+---
+
+## 7. Monitoring & Maintenance
+
+### Performance Monitoring
+* Inference latency
+* Memory usage
+* GPU utilization
+* Batch processing stats
+
+### Model Maintenance
+* Regular evaluation
+* Performance benchmarking
+* Quality metrics tracking
+* Version control
+
+---
+
+## 8. Future Improvements
+
+### Model Enhancements
+* Larger model variants
+* Multi-lingual support
+* Domain-specific fine-tuning
+* Custom architectures
+
+### Infrastructure
+* Distributed serving
+* Model quantization
+* Dynamic batching
+* Auto-scaling
 

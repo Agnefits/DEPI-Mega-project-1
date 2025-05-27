@@ -25,42 +25,66 @@ Client           → FastAPI `/recommend`        → Recommendation Engine      
 
 ## 2. Data Stores & Schemas
 
-* **Job Embeddings Vector Store** (e.g. FAISS, Milvus)
-
-  ```json
-  {
-    "job_id": int,
-    "embedding": [float,...]
+### Vector Store
+```json
+{
+  "job_id": int,
+  "embedding": [float,...],
+  "metadata": {
+    "title": string,
+    "company": string,
+    "location": string,
+    "timestamp": datetime
   }
-  ```
+}
+```
 
-* **User Embeddings Cache** (Redis)
-
-  ```json
-  {
-    "user_id": int,
-    "embedding": [float,...]
-  }
-  ```
-
-* **Optional**: Metadata database (PostgreSQL) for job metadata and user profiles.
+### User Cache
+```json
+{
+  "user_id": int,
+  "embedding": [float,...],
+  "preferences": {
+    "location": string,
+    "salary_range": object,
+    "job_types": array
+  },
+  "last_updated": datetime
+}
 
 ---
 
-## 3. Nearest-Neighbors Sequence Diagram
+## 3. Recommendation Algorithm
 
-```mermaid
-sequenceDiagram
-    participant C as Client
-    participant A as API (FastAPI)
-    participant E as Engine
+### Similarity Computation
+```python
+def compute_similarity(user_emb, job_embs):
+    # Ensure L2 normalization
+    user_vec = normalize(user_emb.reshape(1, -1))
+    job_vecs = normalize(job_embs)
+    
+    # Compute cosine similarity
+    similarities = cosine_similarity(user_vec, job_vecs)[0]
+    
+    return similarities
+```
 
-    C->>A: POST /recommend + {user_emb, job_embs, job_ids}
-    A->>E: recommend_jobs(user_emb, job_ids, job_embs, top_k)
-    E-->>E: sims = cosine_similarity(user_emb, job_embs)
-    E-->>E: idx = argsort(sims)[-top_k:][::-1]
-    E-->>A: [{job_id, score}, ...]
-    A-->>C: HTTP 200 + JSON recommendations
+### Ranking & Filtering
+```python
+def rank_jobs(similarities, job_ids, top_k=7):
+    # Get top-k indices
+    top_indices = np.argsort(similarities)[-top_k:][::-1]
+    
+    # Build recommendations
+    recommendations = [
+        {
+            "job_id": int(job_ids[i]),
+            "score": float(similarities[i])
+        }
+        for i in top_indices
+    ]
+    
+    return recommendations
 ```
 
 ---
@@ -77,26 +101,59 @@ sequenceDiagram
 
 ---
 
-## 5. Pseudocode
 
-```python
-def recommend_jobs(user_emb, job_ids, job_embs, top_k=7):
-    # Ensure shapes and normalization
-    user_vec = normalize(user_emb)
-    job_vecs = normalize(job_embs)
+## 5. Monitoring & Logging
 
-    # Compute similarity scores
-    sims = cosine_similarity(user_vec.reshape(1,-1), job_vecs)[0]
+### Metrics
+* Request latency
+* Cache hit rates
+* Error rates
+* Resource usage
 
-    # Get indices of top_k highest scores
-    top_indices = np.argsort(sims)[-top_k:][::-1]
+---
 
-    # Build result list
-    results = []
-    for i in top_indices:
-        results.append({
-            'job_id': job_ids[i],
-            'score': float(sims[i])
-        })
-    return results
+## 6. Security Measures
+
+### Input Validation
+* Schema validation
+* Vector dimension checks
+* Range validation
+* Type checking
+
+### Data Protection
+* Input sanitization
+* Output filtering
+* Rate limiting
+
+---
+
+## 7. Scaling Strategy
+
+### Horizontal Scaling
+* Load balancing
+* Service replication
+* Database sharding
+* Cache distribution
+
+### Vertical Scaling
+* Resource optimization
+* Memory management
+* CPU utilization
+* GPU acceleration
+
+---
+
+## 8. Future Improvements
+
+### Algorithm Enhancements
+* Hybrid recommendation approach
+* Context-aware ranking
+* Personalization features
+* Diversity optimization
+
+### Infrastructure
+* Microservices architecture
+* Event-driven processing
+* Real-time updates
+* A/B testing framework
 

@@ -64,7 +64,7 @@ class RecommendRequest(BaseModel):
     user_embedding: List[float]
     job_ids: List[int]
     job_embeddings: List[List[float]]
-    top_k: int = 100
+    top_k: int = 100    # Number of recommendations to return
 
 @app.post('/ingest/job')
 def ingest_job(job: JobIn):

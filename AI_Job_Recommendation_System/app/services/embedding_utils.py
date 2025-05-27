@@ -11,7 +11,7 @@ Key Functions:
 - `clean_text(text: str) -> str`: Clean input text by removing URLs, emails, and phone numbers.
 - `initialize_embedding_model(model_name: str, device: str) -> SentenceTransformer`: Load SBERT model.
 - `generate_job_embeddings(model, texts: List[str]) -> np.ndarray`: Embed and L2-normalize job descriptions.
-- `generate_user_embedding(model, skills: List[str]) -> np.ndarray`: Embed and L2-normalize a single user’s skill list.
+- `generate_user_embedding(model, skills: List[str]) -> np.ndarray`: Embed and L2-normalize a single user's skill list.
 
 Dependencies:
 -------------
@@ -56,6 +56,7 @@ def generate_job_embeddings(
     """
     embs = model.encode(texts, convert_to_numpy=True, show_progress_bar=False)
     return normalize(embs, norm='l2', axis=1)
+
 
 
 def generate_user_embedding(
