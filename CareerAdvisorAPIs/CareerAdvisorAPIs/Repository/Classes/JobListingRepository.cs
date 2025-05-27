@@ -3,16 +3,19 @@ using CareerAdvisorAPIs.DTOs.JobListing;
 using CareerAdvisorAPIs.Models;
 using CareerAdvisorAPIs.Repository.Interfaces;
 using CareerAdvisorAPIs.Services;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using System.Text.RegularExpressions;
 
 namespace CareerAdvisorAPIs.Repository.Classes
 {
     public class JobListingRepository : Repository<JobListing>, IJobListingRepository
     {
-        public JobListingRepository(CareerAdvisorCtx context) : base(context) { }
+        private readonly IJobAIModelService _jobAIModelService;
+        public JobListingRepository(CareerAdvisorCtx context, IJobAIModelService jobAIModelService) : base(context)
+        {
+            _jobAIModelService = jobAIModelService;
+        }
         public async Task AddAsync(JobListing job, List<string> categories, List<string> skills, List<JobBenefit> benefits)
         {
             await _context.JobListings.AddAsync(job);
@@ -36,7 +39,7 @@ namespace CareerAdvisorAPIs.Repository.Classes
                 "\r\nwho you are: " + (/*job.WhoYouAre ?? ""*/"Empty"),
             };
 
-            var aiResponse = await JobAIModelService.PostJobAsync(aiRequest);
+            var aiResponse = await _jobAIModelService.PostJobAsync(aiRequest);
 
             if (aiResponse != null)
             {
@@ -79,7 +82,7 @@ namespace CareerAdvisorAPIs.Repository.Classes
                 "\r\nwho you are: " + (/*job.WhoYouAre ?? ""*/"Empty"),
             };
 
-            var aiResponse = await JobAIModelService.PostJobAsync(aiRequest);
+            var aiResponse = await _jobAIModelService.PostJobAsync(aiRequest);
 
             if (aiResponse != null)
             {
@@ -139,32 +142,53 @@ namespace CareerAdvisorAPIs.Repository.Classes
 
         public async Task<IEnumerable<JobListing>> SearchAsync(string keyword, string? country, string? city)
         {
-            keyword = keyword.ToLower();
-            country = (country ?? "").ToLower();
-            city = (city ?? "").ToLower();
+            string Normalize(string input)
+            {
+                if (string.IsNullOrWhiteSpace(input)) return "";
+                var normalized = Regex.Replace(input.ToLower(), @"[^a-z0-9]", " ");
+                return Regex.Replace(normalized, @"\s+", " ").Trim();
+            }
 
-            return await _context.JobListings
+            var normalizedKeyword = Normalize(keyword ?? "");
+            var keywordParts = normalizedKeyword.Split(" ", StringSplitOptions.RemoveEmptyEntries);
+            var normalizedCity = Normalize(city ?? "");
+            var normalizedCountry = Normalize(country ?? "");
+
+            // Step 1: Filter listings in DB
+            var jobListings = await _context.JobListings
                 .Include(j => j.User)
                 .Include(j => j.JobApplications).ThenInclude(ja => ja.User)
                 .Include(j => j.JobListingCategories).ThenInclude(jc => jc.JobCategory)
                 .Include(j => j.JobListingSkills).ThenInclude(js => js.Skill)
                 .Include(j => j.JobBenefits)
+                .Where(j => DateTime.UtcNow <= j.ApplyBefore &&
+                            (j.Capacity == null || j.JobApplications.Count < j.Capacity))
+                .ToListAsync();
+
+            // Step 2: Apply filtering + scoring
+            var filteredAndRanked = jobListings
                 .Where(j =>
-                    EF.Functions.Like(j.Title.ToLower(), $"%{keyword}%") ||
-                    EF.Functions.Like(j.Company.ToLower() ?? "", $"%{keyword}%") ||
-                    (EF.Functions.Like(j.City.ToLower() ?? "", $"%{city}%") && !city.IsNullOrEmpty()) ||
-                    (EF.Functions.Like(j.Country.ToLower() ?? "", $"%{country}%") && !country.IsNullOrEmpty()) ||
-                    EF.Functions.Like(j.Type.ToLower() ?? "", $"%{keyword}%") ||
-                    EF.Functions.Like(j.Description.ToLower() ?? "", $"%{keyword}%") ||
-                    j.JobListingSkills.Any(s => s.Skill.Name.ToLower().Contains(keyword)) ||
-                    j.JobListingCategories.Any(c => c.JobCategory.Name.ToLower().Contains(keyword))
-                )
-                // Apply additional checks for date and capacity.
-                .Where(j =>
-                    DateTime.UtcNow <= j.ApplyBefore && // Check if the job is still open for applications.
-                    (j.Capacity == null || j.JobApplications.Count() < j.Capacity) // Ensure job capacity isn't full.
-                ).ToListAsync();
+                    (string.IsNullOrEmpty(normalizedCity) || Normalize(j.City ?? "").Contains(normalizedCity)) &&
+                    (string.IsNullOrEmpty(normalizedCountry) || Normalize(j.Country ?? "").Contains(normalizedCountry)))
+                .Select(j => new
+                {
+                    Job = j,
+                    Score = keywordParts.Sum(k =>
+                        (Normalize(j.Title).Contains(k) ? 5 : 0) +
+                        (Normalize(j.Company ?? "").Contains(k) ? 4 : 0) +
+                        (Normalize(j.Type ?? "").Contains(k) ? 2 : 0) +
+                        (Normalize(j.Description ?? "").Contains(k) ? 1 : 0) +
+                        (j.JobListingSkills.Any(s => Normalize(s.Skill.Name).Contains(k)) ? 2 : 0) +
+                        (j.JobListingCategories.Any(c => Normalize(c.JobCategory.Name).Contains(k)) ? 2 : 0)
+                    )
+                })
+                .Where(x => x.Score > 0)
+                .OrderByDescending(x => x.Score)
+                .Select(x => x.Job);
+
+            return filteredAndRanked;
         }
+
 
         public async Task<IEnumerable<JobListing>> FilterAsync(FilterJobListingDto dto)
         {
@@ -198,15 +222,68 @@ namespace CareerAdvisorAPIs.Repository.Classes
         }
         public async Task<IEnumerable<JobListing>> RecommendAsync(int userId)
         {
-            var query = _context.JobListings
-                .Include(j => j.User)
-                .Include(j => j.JobApplications).ThenInclude(ja => ja.User)
-                .Include(j => j.JobListingCategories).ThenInclude(jc => jc.JobCategory)
-                .Include(j => j.JobListingSkills).ThenInclude(js => js.Skill)
-                .Include(j => j.JobBenefits)
-                .AsQueryable();
+            var profile = await _context.Profiles.FirstAsync(p => p.UserID == userId);
 
-            return await query.ToListAsync();
+            if (profile.WeightsJson == null)
+            {
+                // Send skills to AI Model
+                var userAiRequest = new UserAIRequestDto
+                {
+                    user_id = profile.UserID,
+                    skills = profile.UserSkills.Select(us => us.Skill.Name).ToList()
+                };
+
+                var aiModelResponse = await _jobAIModelService.PostUserAsync(userAiRequest);
+                if (aiModelResponse != null)
+                    profile.WeightsJson = JsonConvert.SerializeObject(aiModelResponse.embedding);
+
+                await _context.SaveChangesAsync();
+            }
+
+            var jobs = await _context.JobListings
+                .Include(j => j.JobApplications).ThenInclude(ja => ja.User)
+                .Where(j => DateTime.UtcNow <= j.ApplyBefore &&
+                        (j.Capacity == null || j.JobApplications.Count() < j.Capacity) && j.WeightsJson != null)
+                .Select(j => new JobListing
+                {
+                    JobID = j.JobID,
+                    WeightsJson = j.WeightsJson
+                })
+                .ToListAsync();
+
+
+            var aiRequest = new RecommenderAIRequestDto
+            {
+                user_id = userId,
+                user_embedding = JsonConvert.DeserializeObject<IEnumerable<double>>(profile.WeightsJson),
+                job_ids = jobs.Select(j => j.JobID).ToList(),
+                job_embeddings = jobs.Select(j => JsonConvert.DeserializeObject<IEnumerable<double>>(j.WeightsJson)).ToList(),
+                top_k = 100,
+            };
+
+            var aiResponse = await _jobAIModelService.PostRecommenderAsync(aiRequest);
+            if (aiResponse != null)
+            {
+                var recommendedJobs = new List<JobListing>();
+                foreach (var recommend in aiResponse.recommendations)
+                {
+                    var job = await _context.JobListings
+                        .Include(j => j.User)
+                        .Include(j => j.JobApplications).ThenInclude(ja => ja.User)
+                        .Include(j => j.JobListingCategories).ThenInclude(jc => jc.JobCategory)
+                        .Include(j => j.JobListingSkills).ThenInclude(js => js.Skill)
+                        .Include(j => j.JobBenefits)
+                        .FirstAsync(j => j.JobID == recommend.job_id);
+
+                    if (job != null)
+                    {
+                        recommendedJobs.Add(job);
+                    }
+                }
+                return recommendedJobs;
+            }
+
+            return [];
         }
 
         public async Task<JobListing?> GetDetailedByIdAsync(int id) =>

@@ -1,11 +1,13 @@
 ﻿using CareerAdvisorAPIs.Data;
 using CareerAdvisorAPIs.Repository.Interfaces;
+using CareerAdvisorAPIs.Services;
 
 namespace CareerAdvisorAPIs.Repository.Classes
 {
     public class UnitOfWork : IUnitOfWork
     {
         private readonly CareerAdvisorCtx _context;
+        private readonly IJobAIModelService _jobAIModelService;
         
         public IUserRepository Users { get; private set; }
         public ITokenRepository Tokens { get; private set; }
@@ -32,12 +34,14 @@ namespace CareerAdvisorAPIs.Repository.Classes
         public INotificationSettingRepository NotificationSettings { get; private set; }
         public IHelpRepository HelpRequests { get; private set; }
 
-        public UnitOfWork(CareerAdvisorCtx context)
+        public UnitOfWork(CareerAdvisorCtx context, IJobAIModelService jobAIModelService)
         {
             _context = context;
+            _jobAIModelService = jobAIModelService;
+
             Users = new UserRepository(context);
             Tokens = new TokenRepository(context);
-            JobListings = new JobListingRepository(context);
+            JobListings = new JobListingRepository(context, jobAIModelService);
             JobCategories = new JobCategoryRepository(context);
             JobListingCategories = new JobListingCategoryRepository(context);
             Skills = new SkillRepository(context);
