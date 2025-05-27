@@ -26,6 +26,8 @@ AI_Job_Recommendation_System/
 ├── docs/                      # Project documentation
 │   ├── api_routes.md         # API endpoint documentation
 │   ├── architecture.md       # System architecture
+│   ├── deployment.md         # Deployment guide
+│   ├── development.md        # Development guide
 │   ├── embedding_strategy.md # Embedding model details
 │   ├── model_overview.md     # Model architecture
 │   ├── recommendation_pipeline.md # Recommendation process
@@ -36,8 +38,8 @@ AI_Job_Recommendation_System/
 │   ├── modeling/            # Model development
 │   └── visualizations/      # Data visualization
 ├── scripts/                  # Utility scripts
-├── CONTRIBUTING.md          # Contribution guidelines
 ├── CODE_OF_CONDUCT.md       # Code of conduct
+├── CONTRIBUTING.md          # Contribution guidelines
 ├── LICENSE                  # Project license
 ├── README.md               # Project overview
 ├── requirements.txt        # Python dependencies

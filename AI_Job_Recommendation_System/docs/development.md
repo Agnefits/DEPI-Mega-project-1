@@ -7,7 +7,7 @@ This guide provides comprehensive information for developers working on the AI J
 ### Prerequisites
 - Python 3.8 or higher
 - Git
-- Virtual environment tool (venv or conda)
+- Virtual environment tool (venv)
 - Code editor (VS Code recommended)
 
 ### Local Development Setup
@@ -20,20 +20,54 @@ cd AI_Job_Recommendation_System
 
 2. **Set Up Virtual Environment**
 ```bash
-# Using venv
+# Windows
 python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
+venv\Scripts\activate
 
-# Using conda
-conda create -n job-recommendation python=3.8
-conda activate job-recommendation
+# Linux/Mac
+python3 -m venv venv
+source venv/bin/activate
 ```
 
 3. **Install Dependencies**
 ```bash
 pip install -r requirements.txt
-pip install -r requirements-dev.txt  # Development dependencies
+```
+
+## Project Structure
+
+```
+AI_Job_Recommendation_System/
+├── app/                        # Application code
+│   ├── main.py                # FastAPI application entry point
+│   └── services/
+│       ├── embedding_utils.py  # Text embedding utilities
+│       └── recommendation_engine.py  # Job recommendation logic
+├── data/                      # Data storage
+│   ├── raw/                   # Raw data files
+│   └── processed/             # Processed data files
+├── docs/                      # Project documentation
+│   ├── api_routes.md         # API endpoint documentation
+│   ├── architecture.md       # System architecture
+│   ├── deployment.md         # Deployment guide
+│   ├── development.md        # Development guide
+│   ├── embedding_strategy.md # Embedding model details
+│   ├── model_overview.md     # Model architecture
+│   ├── recommendation_pipeline.md # Recommendation process
+│   └── requirements.md       # System requirements
+├── notebooks/                 # Jupyter notebooks
+│   ├── data_exploration/     # Data analysis notebooks
+│   ├── feature_engineering/  # Feature development
+│   ├── modeling/            # Model development
+│   └── visualizations/      # Data visualization
+├── scripts/                  # Utility scripts
+├── tests/                   # Test files
+├── CONTRIBUTING.md          # Contribution guidelines
+├── CODE_OF_CONDUCT.md       # Code of conduct
+├── LICENSE                  # Project license
+├── README.md               # Project overview
+├── requirements.txt        # Python dependencies
+└── run.py                 # Application runner
 ```
 
 ## Development Workflow
@@ -46,165 +80,148 @@ pip install -r requirements-dev.txt  # Development dependencies
 - Keep functions small and focused on a single responsibility
 - Use meaningful variable and function names
 
-### Git Workflow
+### API Development
 
-1. **Branch Naming Convention**
-   - Feature branches: `feature/feature-name`
-   - Bug fixes: `fix/bug-description`
-   - Documentation: `docs/description`
-
-2. **Commit Messages**
-   - Use present tense
-   - Start with a verb
-   - Keep first line under 50 characters
-   - Provide detailed description in body if needed
-
-3. **Pull Request Process**
-   - Create PR from feature branch to main
-   - Ensure all tests pass
-   - Get at least one code review
-   - Address review comments
-   - Squash commits before merging
-
-### Testing
-
-1. **Unit Tests**
-   - Write tests for all new features
-   - Maintain test coverage above 80%
-   - Run tests before committing:
-   ```bash
-   pytest tests/
-   ```
-
-2. **Integration Tests**
-   - Test API endpoints
-   - Test recommendation pipeline
-   - Test data processing workflows
-
-### Documentation
-
-1. **Code Documentation**
-   - Update docstrings when modifying code
-   - Keep README.md up to date
-   - Document API changes
-
-2. **Technical Documentation**
-   - Update relevant docs in `docs/` directory
-   - Include diagrams for architectural changes
-   - Document new features and configurations
-
-## Project Structure Guidelines
-
-### Adding New Features
-
-1. **API Endpoints**
-   - Place new routes in appropriate router files
+1. **Endpoint Structure**
+   - Use FastAPI for API development
+   - Implement Pydantic models for request/response validation
    - Follow RESTful conventions
-   - Include input validation
-   - Add proper error handling
+   - Include proper error handling
 
-2. **Services**
-   - Add new services in `app/services/`
-   - Follow dependency injection pattern
-   - Include proper logging
-   - Add error handling
+2. **Service Layer**
+   - Place business logic in `app/services/`
+   - Keep services modular and focused
+   - Implement proper error handling
+   - Use dependency injection
 
-3. **Models**
-   - Add new models in appropriate directories
-   - Include model validation
-   - Add model documentation
-   - Include example usage
+### Embedding Service Development
 
-### Data Processing
+1. **Text Processing**
+   - Implement text cleaning in `embedding_utils.py`
+   - Handle URL, email, and phone number removal
+   - Ensure consistent text formatting
 
-1. **Data Pipeline**
-   - Add new data processing scripts in `scripts/`
-   - Document data transformations
-   - Include data validation steps
-   - Add error handling
+2. **Model Integration**
+   - Use Sentence-BERT (all-MiniLM-L6-v2)
+   - Implement proper model initialization
+   - Handle device configuration (CPU/GPU)
+   - Implement L2 normalization
 
-2. **Feature Engineering**
-   - Add new features in `notebooks/feature_engineering/`
-   - Document feature creation process
-   - Include feature importance analysis
-   - Add feature validation
+### Recommendation Engine Development
 
-## Performance Guidelines
+1. **Similarity Calculation**
+   - Implement cosine similarity in `recommendation_engine.py`
+   - Optimize numpy operations
+   - Handle edge cases (empty inputs, etc.)
+   - Implement configurable top-k results
 
-1. **API Performance**
-   - Use async/await for I/O operations
-   - Implement caching where appropriate
-   - Monitor response times
-   - Use connection pooling
-
-2. **Recommendation Engine**
-   - Optimize embedding calculations
-   - Implement batch processing
+2. **Performance Optimization**
    - Use efficient data structures
-   - Monitor memory usage
+   - Implement batch processing where possible
+   - Optimize memory usage
+   - Monitor computation time
 
-## Security Guidelines
+## Testing
 
-1. **API Security**
-   - Implement rate limiting
-   - Use proper authentication
-   - Validate all inputs
-   - Sanitize outputs
+### Unit Testing
 
-2. **Data Security**
-   - Encrypt sensitive data
-   - Implement proper access controls
-   - Follow data privacy guidelines
-   - Regular security audits
+1. **API Tests**
+   - Test all endpoints
+   - Validate request/response formats
+   - Test error handling
+   - Test input validation
 
-## Monitoring and Logging
+2. **Service Tests**
+   - Test embedding generation
+   - Test recommendation logic
+   - Test text processing
+   - Test edge cases
+
+### Integration Testing
+
+1. **End-to-End Tests**
+   - Test complete recommendation flow
+   - Test model loading and inference
+   - Test error handling
+   - Test performance
+
+## Documentation
+
+### Code Documentation
+
+1. **Function Documentation**
+   - Use docstrings for all functions
+   - Include parameter descriptions
+   - Document return values
+   - Include usage examples
+
+2. **API Documentation**
+   - Document all endpoints
+   - Include request/response examples
+   - Document error responses
+   - Keep FastAPI auto-docs updated
+
+### Technical Documentation
+
+1. **Architecture Documentation**
+   - Document system components
+   - Explain data flow
+   - Document dependencies
+   - Include diagrams
+
+2. **Model Documentation**
+   - Document embedding model
+   - Explain text processing
+   - Document similarity calculation
+   - Include performance metrics
+
+## Performance Optimization
+
+1. **Code Optimization**
+   - Profile code regularly
+   - Optimize critical paths
+   - Use efficient data structures
+   - Implement caching where appropriate
+
+2. **Model Optimization**
+   - Optimize embedding generation
+   - Efficient batch processing
+   - Memory usage optimization
+   - GPU utilization (if available)
+
+## Error Handling
+
+1. **Input Validation**
+   - Validate all API inputs
+   - Handle edge cases
+   - Provide clear error messages
+   - Log validation errors
+
+2. **Processing Errors**
+   - Handle model errors
+   - Handle computation errors
+   - Implement proper logging
+   - Provide fallback options
+
+## Logging
 
 1. **Application Logging**
-   - Use structured logging
-   - Include appropriate log levels
-   - Add context to log messages
-   - Implement log rotation
+   - Use Python's logging module
+   - Log important events
+   - Include context information
+   - Use appropriate log levels
 
-2. **Performance Monitoring**
-   - Monitor API response times
-   - Track recommendation accuracy
-   - Monitor resource usage
-   - Set up alerts for anomalies
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Environment Issues**
-   - Check Python version
-   - Verify virtual environment
-   - Check dependency versions
-   - Clear cache if needed
-
-2. **API Issues**
-   - Check API logs
-   - Verify endpoint configuration
-   - Check authentication
-   - Validate request/response format
-
-3. **Recommendation Issues**
-   - Check model loading
-   - Verify data preprocessing
-   - Check embedding generation
-   - Validate similarity calculations
-
-## Getting Help
-
-- Check existing documentation
-- Review issue tracker
-- Contact maintainers
-- Join development discussions
+2. **Performance Logging**
+   - Log processing times
+   - Log resource usage
+   - Log error rates
+   - Monitor system health
 
 ## Best Practices
 
 1. **Code Quality**
    - Write clean, maintainable code
-   - Use design patterns appropriately
+   - Use type hints
    - Follow SOLID principles
    - Regular code reviews
 
@@ -212,11 +229,11 @@ pip install -r requirements-dev.txt  # Development dependencies
    - Profile code regularly
    - Optimize bottlenecks
    - Use appropriate data structures
-   - Implement caching strategies
+   - Monitor resource usage
 
 3. **Testing**
    - Write comprehensive tests
-   - Use test-driven development
+   - Test edge cases
    - Regular test maintenance
    - Monitor test coverage
 
@@ -224,4 +241,4 @@ pip install -r requirements-dev.txt  # Development dependencies
    - Keep documentation up to date
    - Include examples
    - Document edge cases
-   - Regular documentation reviews 
+   - Regular documentation reviews
