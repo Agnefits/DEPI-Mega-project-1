@@ -49,5 +49,6 @@ namespace CareerAdvisorAPIs.Models
         public ICollection<JobBenefit> JobBenefits { get; set; }
         public ICollection<JobApplication> JobApplications { get; set; }
         public ICollection<SavedJob> SavedJobs { get; set; }
+        public List<JobListingQuestion> JobListingQuestions { get; set; }
     }
 }

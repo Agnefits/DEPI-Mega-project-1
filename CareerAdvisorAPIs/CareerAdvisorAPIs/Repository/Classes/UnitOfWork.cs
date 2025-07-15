@@ -33,6 +33,8 @@ namespace CareerAdvisorAPIs.Repository.Classes
         public INotificationRepository Notifications { get; private set; }
         public INotificationSettingRepository NotificationSettings { get; private set; }
         public IHelpRepository HelpRequests { get; private set; }
+        public IJobListingQuestionRepository JobListingQuestionRepository { get; }
+        public IJobApplicationAnswerRepository JobApplicationAnswerRepository { get; }
 
         public UnitOfWork(CareerAdvisorCtx context, IJobAIModelService jobAIModelService)
         {
@@ -63,6 +65,8 @@ namespace CareerAdvisorAPIs.Repository.Classes
             Notifications = new NotificationRepository(context);
             NotificationSettings = new NotificationSettingRepository(context);
             HelpRequests = new HelpRepository(context);
+            JobListingQuestionRepository = new JobListingQuestionRepository(context);
+            JobApplicationAnswerRepository = new JobApplicationAnswerRepository(context);
         }
 
         public async Task SaveAsync()

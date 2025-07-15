@@ -140,57 +140,80 @@ namespace CareerAdvisorAPIs.Repository.Classes
             await _context.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<JobListing>> SearchAsync(string keyword, string? country, string? city)
+         public async Task<IEnumerable<JobListing>> SearchAsync(string keyword, string? country, string? city, int skip = 0, int limit = 100)
         {
-            string Normalize(string input)
-            {
-                if (string.IsNullOrWhiteSpace(input)) return "";
-                var normalized = Regex.Replace(input.ToLower(), @"[^a-z0-9]", " ");
-                return Regex.Replace(normalized, @"\s+", " ").Trim();
-            }
-
-            var normalizedKeyword = Normalize(keyword ?? "");
-            var keywordParts = normalizedKeyword.Split(" ", StringSplitOptions.RemoveEmptyEntries);
-            var normalizedCity = Normalize(city ?? "");
-            var normalizedCountry = Normalize(country ?? "");
-
-            // Step 1: Filter listings in DB
-            var jobListings = await _context.JobListings
-                .Include(j => j.User)
-                .Include(j => j.JobApplications).ThenInclude(ja => ja.User)
-                .Include(j => j.JobListingCategories).ThenInclude(jc => jc.JobCategory)
-                .Include(j => j.JobListingSkills).ThenInclude(js => js.Skill)
-                .Include(j => j.JobBenefits)
+            var query = _context.JobListings
                 .Where(j => DateTime.UtcNow <= j.ApplyBefore &&
-                            (j.Capacity == null || j.JobApplications.Count < j.Capacity))
-                .ToListAsync();
+                            (j.Capacity == null || j.JobApplications.Count < j.Capacity));
 
-            // Step 2: Apply filtering + scoring
-            var filteredAndRanked = jobListings
-                .Where(j =>
-                    (string.IsNullOrEmpty(normalizedCity) || Normalize(j.City ?? "").Contains(normalizedCity)) &&
-                    (string.IsNullOrEmpty(normalizedCountry) || Normalize(j.Country ?? "").Contains(normalizedCountry)))
-                .Select(j => new
+            if (!string.IsNullOrEmpty(city))
+                query = query.Where(j => j.City.ToLower().Contains(city.ToLower()));
+            if (!string.IsNullOrEmpty(country))
+                query = query.Where(j => j.Country.ToLower().Contains(country.ToLower()));
+
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                var keywordParts = Regex.Split(keyword.ToLower(), @"[\s\-_/\\]+")
+                    .Where(k => !string.IsNullOrWhiteSpace(k))
+                    .ToList();
+
+
+                foreach (var part in keywordParts)
                 {
+                    var p = part; // avoid modified closure
+                    query = query.Where(j =>
+                        j.Title.ToLower().Contains(p) ||
+                        (j.Company != null && j.Company.ToLower().Contains(p)) ||
+                        (j.Type != null && j.Type.ToLower().Contains(p)) ||
+                        (j.Description != null && j.Description.ToLower().Contains(p)) ||
+                        j.JobListingSkills.Any(s => s.Skill.Name.ToLower().Contains(p)) ||
+                        j.JobListingCategories.Any(c => c.JobCategory.Name.ToLower().Contains(p))
+                    );
+                }
+
+                // Scoring: sum for all parts
+                var scored = query.Select(j => new {
                     Job = j,
-                    Score = keywordParts.Sum(k =>
-                        (Normalize(j.Title).Contains(k) ? 5 : 0) +
-                        (Normalize(j.Company ?? "").Contains(k) ? 4 : 0) +
-                        (Normalize(j.Type ?? "").Contains(k) ? 2 : 0) +
-                        (Normalize(j.Description ?? "").Contains(k) ? 1 : 0) +
-                        (j.JobListingSkills.Any(s => Normalize(s.Skill.Name).Contains(k)) ? 2 : 0) +
-                        (j.JobListingCategories.Any(c => Normalize(c.JobCategory.Name).Contains(k)) ? 2 : 0)
+                    Score = keywordParts.Sum(part =>
+                        (j.Title.ToLower().Contains(part) ? 5 : 0) +
+                        ((j.Company != null && j.Company.ToLower().Contains(part)) ? 4 : 0) +
+                        ((j.Type != null && j.Type.ToLower().Contains(part)) ? 2 : 0) +
+                        ((j.Description != null && j.Description.ToLower().Contains(part)) ? 1 : 0) +
+                        (j.JobListingSkills.Any(s => s.Skill.Name.ToLower().Contains(part)) ? 2 : 0) +
+                        (j.JobListingCategories.Any(c => c.JobCategory.Name.ToLower().Contains(part)) ? 2 : 0)
                     )
                 })
-                .Where(x => x.Score > 0)
                 .OrderByDescending(x => x.Score)
-                .Select(x => x.Job);
+                .Skip(skip)
+                .Take(limit);
 
-            return filteredAndRanked;
+                var results = await scored.Select(x => x.Job)
+                    .Include(j => j.User)
+                    .Include(j => j.JobApplications).ThenInclude(ja => ja.User)
+                    .Include(j => j.JobListingCategories).ThenInclude(jc => jc.JobCategory)
+                    .Include(j => j.JobListingSkills).ThenInclude(js => js.Skill)
+                    .Include(j => j.JobBenefits)
+                    .ToListAsync();
+                return results;
+            }
+            else
+            {
+                var results = await query
+                    .OrderByDescending(j => j.JobPostedOn)
+                    .Skip(skip)
+                    .Take(limit)
+                    .Include(j => j.User)
+                    .Include(j => j.JobApplications).ThenInclude(ja => ja.User)
+                    .Include(j => j.JobListingCategories).ThenInclude(jc => jc.JobCategory)
+                    .Include(j => j.JobListingSkills).ThenInclude(js => js.Skill)
+                    .Include(j => j.JobBenefits)
+                    .ToListAsync();
+                return results;
+            }
         }
 
 
-        public async Task<IEnumerable<JobListing>> FilterAsync(FilterJobListingDto dto)
+        public async Task<IEnumerable<JobListing>> FilterAsync(FilterJobListingDto dto, int skip = 0, int limit = 100)
         {
             var query = _context.JobListings
                 .Include(j => j.User)
@@ -218,7 +241,7 @@ namespace CareerAdvisorAPIs.Repository.Classes
                 query = query.Where(j => j.SalaryTo <= dto.SalaryTo);
             }
 
-            return await query.ToListAsync();
+            return await query.Skip(skip).Take(limit).ToListAsync();
         }
         public async Task<IEnumerable<JobListing>> RecommendAsync(int userId)
         {
@@ -290,31 +313,40 @@ namespace CareerAdvisorAPIs.Repository.Classes
             await _context.JobListings
                 .Include(j => j.User)
                 .Include(j => j.JobApplications).ThenInclude(ja => ja.User)
+                .Include(j => j.JobApplications).ThenInclude(ja => ja.JobApplicationAnswers)
                 .Include(j => j.JobListingCategories).ThenInclude(jc => jc.JobCategory)
                 .Include(j => j.JobListingSkills).ThenInclude(js => js.Skill)
                 .Include(j => j.JobBenefits)
+                .Include(j => j.JobListingQuestions)
                 .FirstOrDefaultAsync(j => j.JobID == id);
 
-        public async Task<IEnumerable<JobListing>> GetDetailedAllAsync() =>
+        public async Task<IEnumerable<JobListing>> GetDetailedAllAsync(int skip = 0, int limit = 100) =>
             await _context.JobListings
                 .Include(j => j.User)
                 .Include(j => j.JobApplications).ThenInclude(ja => ja.User)
+                .Include(j => j.JobApplications).ThenInclude(ja => ja.JobApplicationAnswers)
                 .Include(j => j.JobListingCategories).ThenInclude(jc => jc.JobCategory)
                 .Include(j => j.JobListingSkills).ThenInclude(js => js.Skill)
                 .Include(j => j.JobBenefits)
+                .Include(j => j.JobListingQuestions)
                 // Apply additional checks for date and capacity.
                 .Where(j =>
                     DateTime.UtcNow <= j.ApplyBefore && // Check if the job is still open for applications.
                     (j.Capacity == null || j.JobApplications.Count() < j.Capacity) // Ensure job capacity isn't full.
-                ).ToListAsync();
+                )
+                .Skip(skip)
+                .Take(limit)
+                .ToListAsync();
 
         public async Task<IEnumerable<JobListing>> GetByUserIdAsync(int userId) =>
             await _context.JobListings
                 .Include(j => j.User)
                 .Include(j => j.JobApplications).ThenInclude(ja => ja.User)
+                .Include(j => j.JobApplications).ThenInclude(ja => ja.JobApplicationAnswers)
                 .Include(j => j.JobListingCategories).ThenInclude(jc => jc.JobCategory)
                 .Include(j => j.JobListingSkills).ThenInclude(js => js.Skill)
                 .Include(j => j.JobBenefits)
+                .Include(j => j.JobListingQuestions)
                 .Where(ja => ja.UserID == userId)
                 .ToListAsync();
 
@@ -333,5 +365,8 @@ namespace CareerAdvisorAPIs.Repository.Classes
                 })
                 .ToListAsync();
         }
+
+        private string Normalize(string input) =>
+            Regex.Replace(input?.ToLower() ?? "", @"[^a-z0-9]", "");
     }
 }

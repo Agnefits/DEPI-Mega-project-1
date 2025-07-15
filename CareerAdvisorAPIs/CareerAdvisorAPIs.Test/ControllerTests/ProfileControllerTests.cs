@@ -19,6 +19,7 @@ namespace CareerAdvisorAPIs.Tests.Controllers
     public class ProfileControllerTests
     {
         private Mock<IUnitOfWork> _mockUnitOfWork;
+        private Mock<IJobAIModelService> _jobAIModelService;
         private ProfileController _controller;
         private ClaimsPrincipal _user;
 
@@ -26,7 +27,8 @@ namespace CareerAdvisorAPIs.Tests.Controllers
         public void Setup()
         {
             _mockUnitOfWork = new Mock<IUnitOfWork>();
-            _controller = new ProfileController(_mockUnitOfWork.Object);
+            _jobAIModelService = new Mock<IJobAIModelService>();
+            _controller = new ProfileController(_mockUnitOfWork.Object, _jobAIModelService.Object);
 
             // Setup test user
             var claims = new List<Claim>

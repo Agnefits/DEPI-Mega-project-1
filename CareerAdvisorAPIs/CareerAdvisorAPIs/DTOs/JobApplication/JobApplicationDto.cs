@@ -20,6 +20,7 @@ namespace CareerAdvisorAPIs.DTOs.JobApplication
         public DateTime AppliedDate { get; set; }
         public string Status { get; set; }
         public JobListingDto JobListing { get; set; }
+        public List<JobApplicationAnswerDto>? Answers { get; set; }
     }
 
 }

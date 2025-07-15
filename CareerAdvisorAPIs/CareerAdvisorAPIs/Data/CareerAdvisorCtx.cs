@@ -20,6 +20,8 @@ namespace CareerAdvisorAPIs.Data
         public DbSet<JobBenefit> JobBenefits { get; set; }
         public DbSet<SavedJob> SavedJobs { get; set; }
         public DbSet<JobApplication> JobApplications { get; set; }
+        public DbSet<JobListingQuestion> JobListingQuestions { get; set; }
+        public DbSet<JobApplicationAnswer> JobApplicationAnswers { get; set; }
 
         // Profiles
         public DbSet<Profile> Profiles { get; set; }
@@ -178,6 +180,18 @@ namespace CareerAdvisorAPIs.Data
                 .HasMany(j => j.SavedJobs)
                 .WithOne(sj => sj.JobListing)
                 .HasForeignKey(sj => sj.JobID);
+
+            modelBuilder.Entity<JobApplicationAnswer>()
+                .HasOne(a => a.JobApplication)
+                .WithMany(j => j.JobApplicationAnswers)
+                .HasForeignKey(a => a.ApplicationID)
+                .OnDelete(DeleteBehavior.Cascade); // keep cascade here
+
+            modelBuilder.Entity<JobApplicationAnswer>()
+                .HasOne(a => a.JobListingQuestion)
+                .WithMany()
+                .HasForeignKey(a => a.QuestionId)
+                .OnDelete(DeleteBehavior.Restrict); // or .NoAction
 
             // Many-to-One
             modelBuilder.Entity<JobListingSkill>()

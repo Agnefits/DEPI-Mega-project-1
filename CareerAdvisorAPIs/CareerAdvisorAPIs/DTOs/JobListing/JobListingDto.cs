@@ -37,5 +37,6 @@ namespace CareerAdvisorAPIs.DTOs.JobListing
         public List<string> Skills { get; set; }
         public List<JobBenefitDto> JobBenefits { get; set; }
         public List<JobApplicationDto>? JobApplications { get; set; }
+        public List<JobListingQuestionDto>? Questions { get; set; }
     }
 }

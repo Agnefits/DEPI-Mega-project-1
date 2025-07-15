@@ -35,9 +35,9 @@ namespace CareerAdvisorAPIs.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] int skip = 0, [FromQuery] int limit = 100)
         {
-            var jobs = await _unitOfWork.JobListings.GetDetailedAllAsync();
+            var jobs = await _unitOfWork.JobListings.GetDetailedAllAsync(skip, limit);
 
             var dtos = jobs.Select(job => new JobListingDto
             {
@@ -116,6 +116,14 @@ namespace CareerAdvisorAPIs.Controllers
                     Title = b.Title,
                     Description = b.Description,
                 }).ToList(),
+                Questions = user.UserID == job.UserID ? job.JobListingQuestions?.Select(q => new JobListingQuestionDto {
+                    QuestionId = q.QuestionId,
+                    JobId = q.JobId,
+                    Title = q.Title,
+                    Type = q.Type,
+                    Answers = q.Answers,
+                    Correct = q.Correct
+                }).ToList() : new(),
                 JobApplications = user.UserID == job.UserID ? job.JobApplications.Select(b => new JobApplicationDto
                 {
                     ApplicationID = b.ApplicationID,
@@ -178,6 +186,14 @@ namespace CareerAdvisorAPIs.Controllers
                     Title = b.Title,
                     Description = b.Description,
                 }).ToList(),
+                Questions = job.JobListingQuestions?.Select(q => new JobListingQuestionDto {
+                    QuestionId = q.QuestionId,
+                    JobId = q.JobId,
+                    Title = q.Title,
+                    Type = q.Type,
+                    Answers = q.Answers,
+                    Correct = user.UserID == job.UserID ? q.Correct : null
+                }).ToList(),
                 JobApplications = user.UserID == job.UserID ? job.JobApplications.Select(b => new JobApplicationDto
                 {
                     ApplicationID = b.ApplicationID,
@@ -191,7 +207,13 @@ namespace CareerAdvisorAPIs.Controllers
                     AdditionalInformation = b.AdditionalInformation,
                     ResumeFile = b.ResumeFile,
                     AppliedDate = b.AppliedDate,
-                    Status = b.Status
+                    Status = b.Status,
+                    Answers = b.JobApplicationAnswers.Select(a=> new JobApplicationAnswerDto{
+                        AnswerId = a.AnswerId,
+                        QuestionId = a.QuestionId,
+                        ApplicationID = a.ApplicationID,
+                        Answer = a.Answer,
+                    }).ToList()
                 }).ToList() : new()
 
             };
@@ -199,10 +221,10 @@ namespace CareerAdvisorAPIs.Controllers
         }
 
         [HttpGet("search")]
-        public async Task<IActionResult> Search(string keyword, string? country, string? city)
+        public async Task<IActionResult> Search(string keyword, string? country, string? city, int skip = 0, int limit = 100)
         {
             if (string.IsNullOrWhiteSpace(keyword)) return BadRequest("Keyword is required.");
-            var jobs = await _unitOfWork.JobListings.SearchAsync(keyword, country, city);
+            var jobs = await _unitOfWork.JobListings.SearchAsync(keyword, country, city, skip, limit);
 
             var dtos = jobs.Select(job => new JobListingDto
             {
@@ -242,9 +264,9 @@ namespace CareerAdvisorAPIs.Controllers
         }
 
         [HttpPost("Filter")]
-        public async Task<IActionResult> Filter(FilterJobListingDto dto)
+        public async Task<IActionResult> Filter(FilterJobListingDto dto, int skip = 0, int limit = 100)
         {
-            var jobs = await _unitOfWork.JobListings.FilterAsync(dto);
+            var jobs = await _unitOfWork.JobListings.FilterAsync(dto, skip, limit);
 
             var dtos = jobs.Select(job => new JobListingDto
             {
@@ -507,6 +529,103 @@ namespace CareerAdvisorAPIs.Controllers
         {
             var counts = await _unitOfWork.JobListings.GetCategoryJobCountsAsync();
             return Ok(counts);
+        }
+
+        [HttpPost("{jobId}/questions")]
+        public async Task<IActionResult> AddQuestion(int jobId, [FromBody] CreateJobListingQuestionDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            var (user, profile, error) = await GetAuthenticatedUserAndProfileAsync();
+            if (error != null) return error;
+            var job = await _unitOfWork.JobListings.GetByIdAsync(jobId);
+            if (job == null) return NotFound();
+            if (job.UserID != user.UserID) return Forbid();
+            var question = new JobListingQuestion
+            {
+                JobId = jobId,
+                Title = dto.Title,
+                Type = dto.Type,
+                Answers = dto.Answers,
+                Correct = dto.Correct
+            };
+            await _unitOfWork.JobListingQuestionRepository.AddAsync(question);
+            await _unitOfWork.SaveAsync();
+            var addedQuestion = new JobListingQuestionDto
+            {
+                QuestionId = question.QuestionId,
+                JobId = question.JobId,
+                Title = question.Title,
+                Type = question.Type,
+                Answers = question.Answers,
+                Correct = question.Correct
+            };
+            return Ok(new { Success = true, message = "Question added successfully", addedQuestion});
+        }
+
+        [HttpPut("questions/{questionId}")]
+        public async Task<IActionResult> EditQuestion(int questionId, [FromBody] EditJobListingQuestionDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            var (user, profile, error) = await GetAuthenticatedUserAndProfileAsync();
+            if (error != null) return error;
+            var question = await _unitOfWork.JobListingQuestionRepository.GetByIdAsync(questionId);
+            if (question == null) return NotFound();
+            var job = await _unitOfWork.JobListings.GetByIdAsync(question.JobId);
+            if (job == null) return NotFound();
+            if (job.UserID != user.UserID) return Forbid();
+            question.Title = dto.Title;
+            question.Type = dto.Type;
+            question.Answers = dto.Answers;
+            question.Correct = dto.Correct;
+            await _unitOfWork.SaveAsync();
+            var updatedQuestion = new JobListingQuestionDto
+            {
+                QuestionId = question.QuestionId,
+                JobId = question.JobId,
+                Title = question.Title,
+                Type = question.Type,
+                Answers = question.Answers,
+                Correct = question.Correct
+            };
+            return Ok(new { Success = true, message = "Question updated successfully", updatedQuestion});
+        }
+
+        [HttpDelete("questions/{questionId}")]
+        public async Task<IActionResult> DeleteQuestion(int questionId)
+        {
+            var (user, profile, error) = await GetAuthenticatedUserAndProfileAsync();
+            if (error != null) return error;
+            var question = await _unitOfWork.JobListingQuestionRepository.GetByIdAsync(questionId);
+            if (question == null) return NotFound();
+            var job = await _unitOfWork.JobListings.GetByIdAsync(question.JobId);
+            if (job == null) return NotFound();
+            if (job.UserID != user.UserID) return Forbid();
+            _unitOfWork.JobListingQuestionRepository.Delete(question);
+            await _unitOfWork.SaveAsync();
+            return Ok(new { Success = true, message = "question removed successfully"});
+        }
+
+        [HttpGet("questions/{questionId}")]
+        public async Task<IActionResult> GetQuestion(int questionId)
+        {
+              var (user, profile, error) = await GetAuthenticatedUserAndProfileAsync();
+            if (error != null) return error;
+            var question = await _unitOfWork.JobListingQuestionRepository.GetByIdAsync(questionId);
+            if (question == null) return NotFound();
+            var job = await _unitOfWork.JobListings.GetByIdAsync(question.JobId);
+            if (job == null) return NotFound();
+            var dto = new JobListingQuestionDto
+            {
+                QuestionId = question.QuestionId,
+                JobId = question.JobId,
+                Title = question.Title,
+                Type = question.Type,
+                Answers = question.Answers,
+                Correct = job.UserID != user.UserID?question.Correct :  null
+            };
+            return Ok(dto);
         }
     }
 

@@ -40,5 +40,6 @@ namespace CareerAdvisorAPIs.Models
 
         public User User { get; set; }
         public JobListing JobListing { get; set; }
+        public List<JobApplicationAnswer> JobApplicationAnswers { get; set; }
     }
 }

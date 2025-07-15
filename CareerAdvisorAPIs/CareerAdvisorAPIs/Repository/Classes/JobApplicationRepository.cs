@@ -12,37 +12,43 @@ namespace CareerAdvisorAPIs.Repository.Classes
         public async Task<JobApplication?> GetDetailedByIdAsync(int id)
         {
             return await _context.JobApplications
-                     .Include(j => j.User)
-                     .Include(j => j.JobListing)
-                         .ThenInclude(j => j.User)
-                     .Include(j => j.JobListing)
-                         .ThenInclude(j => j.JobListingCategories)
-                             .ThenInclude(jc => jc.JobCategory)
-                     .Include(j => j.JobListing)
-                         .ThenInclude(j => j.JobListingSkills)
-                             .ThenInclude(js => js.Skill)
-                     .Include(j => j.JobListing)
-                         .ThenInclude(j => j.JobBenefits)
-                     .FirstOrDefaultAsync(a => a.ApplicationID == id);
+                    .Include(j => j.JobApplicationAnswers)
+                    .Include(j => j.User)
+                    .Include(j => j.JobListing)
+                        .ThenInclude(j => j.User)
+                    .Include(j => j.JobListing)
+                        .ThenInclude(j => j.JobListingCategories)
+                            .ThenInclude(jc => jc.JobCategory)
+                    .Include(j => j.JobListing)
+                        .ThenInclude(j => j.JobListingSkills)
+                            .ThenInclude(js => js.Skill)
+                    .Include(j => j.JobListing)
+                        .ThenInclude(j => j.JobBenefits)
+                    .Include(j => j.JobListing)
+                        .ThenInclude(j => j.JobListingQuestions)
+                    .FirstOrDefaultAsync(a => a.ApplicationID == id);
         }
 
 
         public async Task<IEnumerable<JobApplication>> GetByUserIdAsync(int userId)
         {
             return await _context.JobApplications
-                                 .Include(ja => ja.User)
-                                 .Include(ja => ja.JobListing)
-                                     .ThenInclude(j => j.User)
-                                 .Include(j => j.JobListing)
-                                     .ThenInclude(j => j.JobListingCategories)
-                                         .ThenInclude(jc => jc.JobCategory)
-                                 .Include(j => j.JobListing)
-                                     .ThenInclude(j => j.JobListingSkills)
-                                         .ThenInclude(js => js.Skill)
-                                 .Include(j => j.JobListing)
-                                     .ThenInclude(j => j.JobBenefits)
-                                     .Where(ja=> ja.UserID == userId)
-                                 .ToListAsync();
+                    .Include(j => j.JobApplicationAnswers)
+                    .Include(ja => ja.User)
+                    .Include(ja => ja.JobListing)
+                        .ThenInclude(j => j.User)
+                    .Include(j => j.JobListing)
+                        .ThenInclude(j => j.JobListingCategories)
+                            .ThenInclude(jc => jc.JobCategory)
+                    .Include(j => j.JobListing)
+                        .ThenInclude(j => j.JobListingSkills)
+                            .ThenInclude(js => js.Skill)
+                    .Include(j => j.JobListing)
+                        .ThenInclude(j => j.JobBenefits)
+                        .Where(ja => ja.UserID == userId)
+                    .Include(j => j.JobListing)
+                        .ThenInclude(j => j.JobListingQuestions)
+                    .ToListAsync();
         }
     }
 }

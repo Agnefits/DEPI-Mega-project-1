@@ -95,6 +95,10 @@ namespace CareerAdvisorAPIs.Controllers
             profile.Phone = editProfile.Phone;
             profile.Gender = editProfile.Gender;
             profile.Type = editProfile.Type;
+            if (!string.IsNullOrWhiteSpace(editProfile.Fullname))
+            {
+                user.Fullname = editProfile.Fullname;
+            }
 
             // Delete profile image
             if ((editProfile.DeleteImage ?? false) && !string.IsNullOrEmpty(profile.Image))

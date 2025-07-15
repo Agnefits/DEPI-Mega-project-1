@@ -4,6 +4,10 @@ namespace CareerAdvisorAPIs.DTOs.Profile
 {
     public class EditProfileDto
     {
+
+        [MaxLength(100)]
+        public string? Fullname { get; set; }
+        
         [MaxLength(100)]
         public string? JobTitle { get; set; }
 

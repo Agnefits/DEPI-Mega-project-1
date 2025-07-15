@@ -1,4 +1,6 @@
-﻿namespace CareerAdvisorAPIs.Repository.Interfaces
+﻿using CareerAdvisorAPIs.Repository.Interfaces;
+
+namespace CareerAdvisorAPIs.Repository.Interfaces
 {
     public interface IUnitOfWork : IDisposable
     {
@@ -26,6 +28,8 @@
         INotificationRepository Notifications { get; }
         INotificationSettingRepository NotificationSettings { get; }
         IHelpRepository HelpRequests { get; }
+        IJobListingQuestionRepository JobListingQuestionRepository { get; }
+        IJobApplicationAnswerRepository JobApplicationAnswerRepository { get; }
         Task SaveAsync();
     }
 
