@@ -584,14 +584,14 @@ namespace CareerAdvisorAPIs.Controllers
             return Ok(new { Success = true, message = "Question added successfully", addedQuestion});
         }
 
-        [HttpPut("questions/{questionId}")]
-        public async Task<IActionResult> EditQuestion(int questionId, [FromBody] EditJobListingQuestionDto dto)
+        [HttpPut("questions")]
+        public async Task<IActionResult> EditQuestion([FromBody] EditJobListingQuestionDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
             var (user, profile, error) = await GetAuthenticatedUserAndProfileAsync();
             if (error != null) return error;
-            var question = await _unitOfWork.JobListingQuestionRepository.GetByIdAsync(questionId);
+            var question = await _unitOfWork.JobListingQuestionRepository.GetByIdAsync(dto.QuestionId);
             if (question == null) return NotFound();
             var job = await _unitOfWork.JobListings.GetByIdAsync(question.JobId);
             if (job == null) return NotFound();
@@ -686,6 +686,60 @@ namespace CareerAdvisorAPIs.Controllers
                 Correct = q.Correct
             }).ToList();
             return Ok(resultDtos);
+        }
+
+        [HttpPut("{jobId}/questions/bulk")]
+        public async Task<IActionResult> EditQuestionsBulk(int jobId, [FromBody] List<EditJobListingQuestionDto> dtos)
+        {
+            if (dtos == null || dtos.Count == 0)
+                return BadRequest("No questions provided.");
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            var (user, profile, error) = await GetAuthenticatedUserAndProfileAsync();
+            if (error != null) return error;
+            var job = await _unitOfWork.JobListings.GetDetailedByIdAsync(jobId);
+            if (job == null) return NotFound();
+            if (job.UserID != user.UserID) return Forbid();
+            var updated = new List<JobListingQuestionDto>();
+            foreach (var dto in dtos)
+            {
+                var question = job.JobListingQuestions.FirstOrDefault(q => q.QuestionId == dto.QuestionId);
+                if (question == null) continue;
+                question.Title = dto.Title;
+                question.Type = dto.Type;
+                question.Answers = dto.Answers;
+                question.Correct = dto.Correct;
+                updated.Add(new JobListingQuestionDto
+                {
+                    QuestionId = question.QuestionId,
+                    JobId = question.JobId,
+                    Title = question.Title,
+                    Type = question.Type,
+                    Answers = question.Answers,
+                    Correct = question.Correct
+                });
+            }
+            await _unitOfWork.SaveAsync();
+            return Ok(updated);
+        }
+
+        [HttpDelete("{jobId}/questions/bulk")]
+        public async Task<IActionResult> DeleteQuestionsBulk(int jobId, [FromBody] List<int> questionIds)
+        {
+            if (questionIds == null || questionIds.Count == 0)
+                return BadRequest("No question IDs provided.");
+            var (user, profile, error) = await GetAuthenticatedUserAndProfileAsync();
+            if (error != null) return error;
+            var job = await _unitOfWork.JobListings.GetDetailedByIdAsync(jobId);
+            if (job == null) return NotFound();
+            if (job.UserID != user.UserID) return Forbid();
+            var toDelete = job.JobListingQuestions.Where(q => questionIds.Contains(q.QuestionId)).ToList();
+            foreach (var question in toDelete)
+            {
+                _unitOfWork.JobListingQuestionRepository.Delete(question);
+            }
+            await _unitOfWork.SaveAsync();
+            return Ok(new { deleted = toDelete.Select(q => q.QuestionId).ToList() });
         }
     }
 

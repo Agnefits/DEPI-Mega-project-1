@@ -12,5 +12,7 @@ namespace CareerAdvisorAPIs.DTOs.JobListing
         public string? Answers { get; set; }
         [MaxLength(500)]
         public string? Correct { get; set; }
+        [Required]
+        public int QuestionId { get; set; }
     }
 } 
