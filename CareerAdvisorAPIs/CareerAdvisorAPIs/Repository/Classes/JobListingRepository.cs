@@ -140,27 +140,23 @@ namespace CareerAdvisorAPIs.Repository.Classes
             await _context.SaveChangesAsync();
         }
 
-         public async Task<IEnumerable<JobListing>> SearchAsync(string keyword, string? country, string? city, int skip = 0, int limit = 100)
+        public async Task<int> CountSearchAsync(string keyword, string? country, string? city)
         {
             var query = _context.JobListings
                 .Where(j => DateTime.UtcNow <= j.ApplyBefore &&
                             (j.Capacity == null || j.JobApplications.Count < j.Capacity));
-
             if (!string.IsNullOrEmpty(city))
                 query = query.Where(j => j.City.ToLower().Contains(city.ToLower()));
             if (!string.IsNullOrEmpty(country))
                 query = query.Where(j => j.Country.ToLower().Contains(country.ToLower()));
-
             if (!string.IsNullOrWhiteSpace(keyword))
             {
                 var keywordParts = Regex.Split(keyword.ToLower(), @"[\s\-_/\\]+")
                     .Where(k => !string.IsNullOrWhiteSpace(k))
                     .ToList();
-
-
                 foreach (var part in keywordParts)
                 {
-                    var p = part; // avoid modified closure
+                    var p = part;
                     query = query.Where(j =>
                         j.Title.ToLower().Contains(p) ||
                         (j.Company != null && j.Company.ToLower().Contains(p)) ||
@@ -170,8 +166,62 @@ namespace CareerAdvisorAPIs.Repository.Classes
                         j.JobListingCategories.Any(c => c.JobCategory.Name.ToLower().Contains(p))
                     );
                 }
+            }
+            return await query.CountAsync();
+        }
 
-                // Scoring: sum for all parts
+        public async Task<int> CountFilterAsync(FilterJobListingDto dto)
+        {
+            var query = _context.JobListings
+                .Where(j => DateTime.UtcNow <= j.ApplyBefore &&
+                            (j.Capacity == null || j.JobApplications.Count < j.Capacity));
+            if (dto.Categories != null && dto.Categories.Any())
+            {
+                query = query.Where(j =>
+                    j.JobListingCategories.Any(c => dto.Categories.Contains(c.JobCategory.Name)));
+            }
+            if (dto.Types != null && dto.Types.Any())
+            {
+                query = query.Where(j =>
+                    j.JobListingSkills.Any(s => dto.Types.Contains(s.JobListing.Type ?? "")));
+            }
+            if (dto.SalaryFrom != null)
+            {
+                query = query.Where(j => j.SalaryFrom >= dto.SalaryFrom);
+            }
+            if (dto.SalaryTo != null)
+            {
+                query = query.Where(j => j.SalaryTo <= dto.SalaryTo);
+            }
+            return await query.CountAsync();
+        }
+
+        public async Task<IEnumerable<JobListing>> SearchAsync(string keyword, string? country, string? city, int skip = 0, int limit = 20, string sort = null)
+        {
+            var query = _context.JobListings
+                .Where(j => DateTime.UtcNow <= j.ApplyBefore &&
+                            (j.Capacity == null || j.JobApplications.Count < j.Capacity));
+            if (!string.IsNullOrEmpty(city))
+                query = query.Where(j => j.City.ToLower().Contains(city.ToLower()));
+            if (!string.IsNullOrEmpty(country))
+                query = query.Where(j => j.Country.ToLower().Contains(country.ToLower()));
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                var keywordParts = Regex.Split(keyword.ToLower(), @"[\s\-_/\\]+")
+                    .Where(k => !string.IsNullOrWhiteSpace(k))
+                    .ToList();
+                foreach (var part in keywordParts)
+                {
+                    var p = part;
+                    query = query.Where(j =>
+                        j.Title.ToLower().Contains(p) ||
+                        (j.Company != null && j.Company.ToLower().Contains(p)) ||
+                        (j.Type != null && j.Type.ToLower().Contains(p)) ||
+                        (j.Description != null && j.Description.ToLower().Contains(p)) ||
+                        j.JobListingSkills.Any(s => s.Skill.Name.ToLower().Contains(p)) ||
+                        j.JobListingCategories.Any(c => c.JobCategory.Name.ToLower().Contains(p))
+                    );
+                }
                 var scored = query.Select(j => new {
                     Job = j,
                     Score = keywordParts.Sum(part =>
@@ -182,11 +232,42 @@ namespace CareerAdvisorAPIs.Repository.Classes
                         (j.JobListingSkills.Any(s => s.Skill.Name.ToLower().Contains(part)) ? 2 : 0) +
                         (j.JobListingCategories.Any(c => c.JobCategory.Name.ToLower().Contains(part)) ? 2 : 0)
                     )
-                })
-                .OrderByDescending(x => x.Score)
-                .Skip(skip)
-                .Take(limit);
-
+                });
+                // Sorting
+                if (!string.IsNullOrEmpty(sort))
+                {
+                    switch (sort.ToLower())
+                    {
+                        case "date":
+                        case "date_desc":
+                            scored = scored.OrderByDescending(x => x.Job.JobPostedOn);
+                            break;
+                        case "date_asc":
+                            scored = scored.OrderBy(x => x.Job.JobPostedOn);
+                            break;
+                        case "salary":
+                        case "salary_desc":
+                            scored = scored.OrderByDescending(x => x.Job.SalaryTo ?? 0);
+                            break;
+                        case "salary_asc":
+                            scored = scored.OrderBy(x => x.Job.SalaryTo ?? 0);
+                            break;
+                        case "title_asc":
+                            scored = scored.OrderBy(x => x.Job.Title);
+                            break;
+                        case "title_desc":
+                            scored = scored.OrderByDescending(x => x.Job.Title);
+                            break;
+                        default:
+                            scored = scored.OrderByDescending(x => x.Job.JobPostedOn);
+                            break;
+                    }
+                }
+                else
+                {
+                    scored = scored.OrderByDescending(x => x.Job.JobPostedOn);
+                }
+                scored = scored.Skip(skip).Take(limit);
                 var results = await scored.Select(x => x.Job)
                     .Include(j => j.User)
                     .Include(j => j.JobApplications).ThenInclude(ja => ja.User)
@@ -198,8 +279,41 @@ namespace CareerAdvisorAPIs.Repository.Classes
             }
             else
             {
+                // Sorting
+                if (!string.IsNullOrEmpty(sort))
+                {
+                    switch (sort.ToLower())
+                    {
+                        case "date":
+                        case "date_desc":
+                            query = query.OrderByDescending(j => j.JobPostedOn);
+                            break;
+                        case "date_asc":
+                            query = query.OrderBy(j => j.JobPostedOn);
+                            break;
+                        case "salary":
+                        case "salary_desc":
+                            query = query.OrderByDescending(j => j.SalaryTo ?? 0);
+                            break;
+                        case "salary_asc":
+                            query = query.OrderBy(j => j.SalaryTo ?? 0);
+                            break;
+                        case "title_asc":
+                            query = query.OrderBy(j => j.Title);
+                            break;
+                        case "title_desc":
+                            query = query.OrderByDescending(j => j.Title);
+                            break;
+                        default:
+                            query = query.OrderByDescending(j => j.JobPostedOn);
+                            break;
+                    }
+                }
+                else
+                {
+                    query = query.OrderByDescending(j => j.JobPostedOn);
+                }
                 var results = await query
-                    .OrderByDescending(j => j.JobPostedOn)
                     .Skip(skip)
                     .Take(limit)
                     .Include(j => j.User)
@@ -212,8 +326,7 @@ namespace CareerAdvisorAPIs.Repository.Classes
             }
         }
 
-
-        public async Task<IEnumerable<JobListing>> FilterAsync(FilterJobListingDto dto, int skip = 0, int limit = 100)
+        public async Task<IEnumerable<JobListing>> FilterAsync(FilterJobListingDto dto, int skip = 0, int limit = 20, string sort = null)
         {
             var query = _context.JobListings
                 .Include(j => j.User)
@@ -240,7 +353,40 @@ namespace CareerAdvisorAPIs.Repository.Classes
             {
                 query = query.Where(j => j.SalaryTo <= dto.SalaryTo);
             }
-
+            // Sorting
+            if (!string.IsNullOrEmpty(sort))
+            {
+                switch (sort.ToLower())
+                {
+                    case "date":
+                    case "date_desc":
+                        query = query.OrderByDescending(j => j.JobPostedOn);
+                        break;
+                    case "date_asc":
+                        query = query.OrderBy(j => j.JobPostedOn);
+                        break;
+                    case "salary":
+                    case "salary_desc":
+                        query = query.OrderByDescending(j => j.SalaryTo ?? 0);
+                        break;
+                    case "salary_asc":
+                        query = query.OrderBy(j => j.SalaryTo ?? 0);
+                        break;
+                    case "title_asc":
+                        query = query.OrderBy(j => j.Title);
+                        break;
+                    case "title_desc":
+                        query = query.OrderByDescending(j => j.Title);
+                        break;
+                    default:
+                        query = query.OrderByDescending(j => j.JobPostedOn);
+                        break;
+                }
+            }
+            else
+            {
+                query = query.OrderByDescending(j => j.JobPostedOn);
+            }
             return await query.Skip(skip).Take(limit).ToListAsync();
         }
         public async Task<IEnumerable<JobListing>> RecommendAsync(int userId)
@@ -337,6 +483,15 @@ namespace CareerAdvisorAPIs.Repository.Classes
                 .Skip(skip)
                 .Take(limit)
                 .ToListAsync();
+
+        public async Task<int> CountAllAsync()
+        {
+            return await _context.JobListings
+                .Where(j =>
+                    DateTime.UtcNow <= j.ApplyBefore &&
+                    (j.Capacity == null || j.JobApplications.Count() < j.Capacity)
+                ).CountAsync();
+        }
 
         public async Task<IEnumerable<JobListing>> GetByUserIdAsync(int userId) =>
             await _context.JobListings

@@ -76,6 +76,13 @@ namespace CareerAdvisorAPIs.Controllers
             return Ok(dtos);
         }
 
+        [HttpGet("count")]
+        public async Task<IActionResult> CountAll()
+        {
+            var count = await _unitOfWork.JobListings.CountAllAsync();
+            return Ok(new { count });
+        }
+
         [HttpGet("me")]
         public async Task<IActionResult> GetMy()
         {
@@ -220,11 +227,25 @@ namespace CareerAdvisorAPIs.Controllers
             return Ok(dto);
         }
 
+        [HttpGet("search/count")]
+        public async Task<IActionResult> SearchCount(string keyword, string? country, string? city)
+        {
+            var count = await _unitOfWork.JobListings.CountSearchAsync(keyword, country, city);
+            return Ok(new { count });
+        }
+
+        [HttpPost("filter/count")]
+        public async Task<IActionResult> FilterCount([FromBody] FilterJobListingDto dto)
+        {
+            var count = await _unitOfWork.JobListings.CountFilterAsync(dto);
+            return Ok(new { count });
+        }
+
         [HttpGet("search")]
-        public async Task<IActionResult> Search(string keyword, string? country, string? city, int skip = 0, int limit = 100)
+        public async Task<IActionResult> Search(string keyword, string? country, string? city, int skip = 0, int limit = 100, string sort = null)
         {
             if (string.IsNullOrWhiteSpace(keyword)) return BadRequest("Keyword is required.");
-            var jobs = await _unitOfWork.JobListings.SearchAsync(keyword, country, city, skip, limit);
+            var jobs = await _unitOfWork.JobListings.SearchAsync(keyword, country, city, skip, limit, sort);
 
             var dtos = jobs.Select(job => new JobListingDto
             {
@@ -264,9 +285,9 @@ namespace CareerAdvisorAPIs.Controllers
         }
 
         [HttpPost("Filter")]
-        public async Task<IActionResult> Filter(FilterJobListingDto dto, int skip = 0, int limit = 100)
+        public async Task<IActionResult> Filter(FilterJobListingDto dto, int skip = 0, int limit = 100, string sort = null)
         {
-            var jobs = await _unitOfWork.JobListings.FilterAsync(dto, skip, limit);
+            var jobs = await _unitOfWork.JobListings.FilterAsync(dto, skip, limit, sort);
 
             var dtos = jobs.Select(job => new JobListingDto
             {
@@ -626,6 +647,45 @@ namespace CareerAdvisorAPIs.Controllers
                 Correct = job.UserID != user.UserID?question.Correct :  null
             };
             return Ok(dto);
+        }
+
+        [HttpPost("{jobId}/questions/bulk")]
+        public async Task<IActionResult> AddQuestionsBulk(int jobId, [FromBody] List<CreateJobListingQuestionDto> dtos)
+        {
+            if (dtos == null || dtos.Count == 0)
+                return BadRequest("No questions provided.");
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            var (user, profile, error) = await GetAuthenticatedUserAndProfileAsync();
+            if (error != null) return error;
+            var job = await _unitOfWork.JobListings.GetDetailedByIdAsync(jobId);
+            if (job == null) return NotFound();
+            if (job.UserID != user.UserID) return Forbid();
+            var questions = new List<JobListingQuestion>();
+            foreach (var dto in dtos)
+            {
+                var question = new JobListingQuestion
+                {
+                    JobId = jobId,
+                    Title = dto.Title,
+                    Type = dto.Type,
+                    Answers = dto.Answers,
+                    Correct = dto.Correct
+                };
+                questions.Add(question);
+            }
+            await _unitOfWork.JobListingQuestionRepository.AddRangeAsync(questions);
+            await _unitOfWork.SaveAsync();
+            var resultDtos = questions.Select(q => new JobListingQuestionDto
+            {
+                QuestionId = q.QuestionId,
+                JobId = q.JobId,
+                Title = q.Title,
+                Type = q.Type,
+                Answers = q.Answers,
+                Correct = q.Correct
+            }).ToList();
+            return Ok(resultDtos);
         }
     }
 

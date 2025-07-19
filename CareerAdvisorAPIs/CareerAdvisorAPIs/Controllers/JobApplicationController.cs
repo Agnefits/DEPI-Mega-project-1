@@ -385,8 +385,10 @@ namespace CareerAdvisorAPIs.Controllers
         }
 
         [HttpPost("{applicationId}/answers")]
-        public async Task<IActionResult> AddAnswer(int applicationId, [FromBody] JobApplicationAnswerDto dto)
+        public async Task<IActionResult> AddAnswer(int applicationId, [FromBody] AddJobApplicationAnswerVm vm)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
             var (user, profile, error) = await GetAuthenticatedUserAndProfileAsync();
             if (error != null) return error;
             var application = await _unitOfWork.JobApplications.GetDetailedByIdAsync(applicationId);
@@ -395,13 +397,18 @@ namespace CareerAdvisorAPIs.Controllers
             var answer = new JobApplicationAnswer
             {
                 ApplicationID = applicationId,
-                QuestionId = dto.QuestionId,
-                Answer = dto.Answer
+                QuestionId = vm.QuestionId,
+                Answer = vm.Answer
             };
             await _unitOfWork.JobApplicationAnswerRepository.AddAsync(answer);
             await _unitOfWork.SaveAsync();
-            dto.AnswerId = answer.AnswerId;
-            return Ok(dto);
+            return Ok(new JobApplicationAnswerDto
+            {
+                AnswerId = answer.AnswerId,
+                ApplicationID = answer.ApplicationID,
+                QuestionId = answer.QuestionId,
+                Answer = answer.Answer
+            });
         }
     }
 }
