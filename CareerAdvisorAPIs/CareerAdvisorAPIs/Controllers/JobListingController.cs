@@ -703,21 +703,47 @@ namespace CareerAdvisorAPIs.Controllers
             var updated = new List<JobListingQuestionDto>();
             foreach (var dto in dtos)
             {
-                var question = job.JobListingQuestions.FirstOrDefault(q => q.QuestionId == dto.QuestionId);
-                if (question == null) continue;
-                question.Title = dto.Title;
-                question.Type = dto.Type;
-                question.Answers = dto.Answers;
-                question.Correct = dto.Correct;
-                updated.Add(new JobListingQuestionDto
+                if (dto.QuestionId == null)
                 {
-                    QuestionId = question.QuestionId,
-                    JobId = question.JobId,
-                    Title = question.Title,
-                    Type = question.Type,
-                    Answers = question.Answers,
-                    Correct = question.Correct
-                });
+                    // Add new question
+                    var newQuestion = new JobListingQuestion
+                    {
+                        JobId = jobId,
+                        Title = dto.Title,
+                        Type = dto.Type,
+                        Answers = dto.Answers,
+                        Correct = dto.Correct
+                    };
+                    await _unitOfWork.JobListingQuestionRepository.AddAsync(newQuestion);
+                    updated.Add(new JobListingQuestionDto
+                    {
+                        QuestionId = newQuestion.QuestionId,
+                        JobId = newQuestion.JobId,
+                        Title = newQuestion.Title,
+                        Type = newQuestion.Type,
+                        Answers = newQuestion.Answers,
+                        Correct = newQuestion.Correct
+                    });
+                }
+                else
+                {
+                    // Update existing question
+                    var question = job.JobListingQuestions.FirstOrDefault(q => q.QuestionId == dto.QuestionId);
+                    if (question == null) continue;
+                    question.Title = dto.Title;
+                    question.Type = dto.Type;
+                    question.Answers = dto.Answers;
+                    question.Correct = dto.Correct;
+                    updated.Add(new JobListingQuestionDto
+                    {
+                        QuestionId = question.QuestionId,
+                        JobId = question.JobId,
+                        Title = question.Title,
+                        Type = question.Type,
+                        Answers = question.Answers,
+                        Correct = question.Correct
+                    });
+                }
             }
             await _unitOfWork.SaveAsync();
             return Ok(updated);
